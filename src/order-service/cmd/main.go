@@ -8,6 +8,11 @@ import (
 	"orders-service/internal/config"
 )
 
+// @title Order Service API
+// @version 1.0
+// @description Order microservice
+// @BasePath /v1
+// @schemes http https
 func main() {
 	conf, err := config.Load()
 	if err != nil {

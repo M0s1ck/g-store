@@ -5,9 +5,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/swaggo/http-swagger"
 
 	"orders-service/internal/delivery/http/handlers"
 	mymiddleware "orders-service/internal/delivery/http/middleware"
+	_ "orders-service/internal/docs"
 )
 
 type RouterDeps struct {
@@ -23,12 +25,14 @@ func NewRouter(deps *RouterDeps) http.Handler {
 		middleware.Logger,
 	)
 
-	router.Route("/api/orders/{id}", func(r chi.Router) {
+	router.Route("/v1/orders/{id}", func(r chi.Router) {
 		r.Use(mymiddleware.UUIDMiddleware("id"))
+		r.Use(mymiddleware.UserIdAuthMiddleware)
 		r.Get("/", deps.OrderHandler.GetById)
 	})
 
 	addHello(router)
+	addSwagger(router)
 
 	return router
 }
@@ -40,4 +44,8 @@ func addHello(r *chi.Mux) {
 			return
 		}
 	})
+}
+
+func addSwagger(r *chi.Mux) {
+	r.Get("/swagger/*", httpSwagger.WrapHandler)
 }

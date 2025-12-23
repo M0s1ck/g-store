@@ -21,12 +21,28 @@ func NewOrderHandler(get *get_orders.GetOrdersUsecase) *OrderHandler {
 	}
 }
 
+// GetById godoc
+// @Summary Get order by id
+// @Description Returns order by UUID
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Param X-User-ID header string true "User ID (UUID)"
+// @Param id path string true "Order ID (UUID)"
+// @Success 200 {object} dto.OrderResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /orders/{id} [get]
 func (h *OrderHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	orderId := mymiddleware.UUIDFromContext(r.Context())
+	orderId := mymiddleware.UUIDFromContext(ctx)
+	userId := mymiddleware.UserIdFromContext(ctx)
 
-	order, err := h.get.GetById(ctx, orderId)
+	order, err := h.get.GetById(ctx, orderId, userId)
 	if err != nil {
 		h.handleError(w, err)
 		return
@@ -40,7 +56,10 @@ func (h *OrderHandler) handleError(w http.ResponseWriter, err error) {
 	case errors.Is(err, derrors.ErrOrderNotFound):
 		helpers.RespondError(w, http.StatusNotFound, err.Error())
 
+	case errors.Is(err, derrors.ErrForbidden):
+		helpers.RespondError(w, http.StatusForbidden, err.Error())
+
 	default:
-		helpers.RespondError(w, http.StatusInternalServerError, "internal error")
+		helpers.RespondError(w, http.StatusInternalServerError, "internal error: "+err.Error())
 	}
 }

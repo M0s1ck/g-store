@@ -3,6 +3,7 @@ package mapper
 import (
 	"orders-service/internal/delivery/http/dto"
 	"orders-service/internal/domain/entities"
+	"orders-service/internal/usecase/create_order"
 )
 
 func OrderToResponse(order *entities.Order) *dto.OrderResponse {
@@ -23,4 +24,16 @@ func OrdersToResponse(orders []entities.Order) []dto.OrderResponse {
 	}
 
 	return res
+}
+
+func OrderCreateRequestToApplication(req dto.CreateOrderRequest) *create_order.CreateOrderRequest {
+	return &create_order.CreateOrderRequest{
+		Amount: req.Amount,
+	}
+}
+
+func OrderCreatedResponseToDto(resp *create_order.CreateOrderResponse) *dto.OrderCreatedResponse {
+	return &dto.OrderCreatedResponse{
+		Id: resp.Id,
+	}
 }

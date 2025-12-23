@@ -5,12 +5,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
 	"orders-service/internal/domain/entities"
 	derrors "orders-service/internal/domain/errors"
+	"orders-service/internal/infrastructure/db/postgres"
 )
 
 type OrderRepository struct {
@@ -55,4 +57,25 @@ func (r *OrderRepository) GetByUserId(ctx context.Context, userId uuid.UUID, pag
 	}
 
 	return orders, total, nil
+}
+
+func (r *OrderRepository) Create(ctx context.Context, order *entities.Order) error {
+	exec := r.getExec(ctx)
+
+	rows, err := exec.ExecContext(ctx,
+		`INSERT INTO orders (id, user_id, amount, status)
+				VALUES ($1, $2, $3, $4)`,
+		order.Id, order.UserId, order.Amount, order.Status)
+
+	log.Printf("%v rows effected", rows)
+
+	return err
+}
+
+// returns sqlx.TX if we're in transaction or r.db if not
+func (r *OrderRepository) getExec(ctx context.Context) sqlx.ExtContext {
+	if tx, ok := ctx.Value(postgres.TxKey{}).(*sqlx.Tx); ok {
+		return tx
+	}
+	return r.db
 }

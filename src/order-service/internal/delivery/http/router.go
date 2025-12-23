@@ -25,16 +25,18 @@ func NewRouter(deps *RouterDeps) http.Handler {
 		middleware.Logger,
 	)
 
-	router.Route("/v1/orders/{id}", func(r chi.Router) {
-		r.Use(mymiddleware.UUIDMiddleware("id"))
-		r.Use(mymiddleware.UserIdAuthMiddleware)
-		r.Get("/", deps.OrderHandler.GetById)
-	})
-
 	router.Route("/v1/orders", func(r chi.Router) {
 		r.Use(mymiddleware.UserIdAuthMiddleware)
-		r.Use(mymiddleware.PaginationMiddleware(1, 20))
-		r.Get("/", deps.OrderHandler.GetByUser)
+
+		r.With(mymiddleware.PaginationMiddleware(1, 20)).
+			Get("/", deps.OrderHandler.GetByUser)
+
+		r.Post("/", deps.OrderHandler.Create)
+
+		r.Route("/{id}", func(r chi.Router) {
+			r.Use(mymiddleware.UUIDMiddleware("id"))
+			r.Get("/", deps.OrderHandler.GetById)
+		})
 	})
 
 	addHello(router)

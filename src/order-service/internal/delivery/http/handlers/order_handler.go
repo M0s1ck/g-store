@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -9,18 +10,26 @@ import (
 	"orders-service/internal/delivery/http/mapper"
 	mymiddleware "orders-service/internal/delivery/http/middleware"
 	derrors "orders-service/internal/domain/errors"
+	"orders-service/internal/usecase/create_order"
 	"orders-service/internal/usecase/get_orders"
 )
 
 type OrderHandler struct {
 	getById   *get_orders.GetByIdUsecase
 	getByUser *get_orders.GetByUserUsecase
+	create    *create_order.CreateOrderUsecase
 }
 
-func NewOrderHandler(get *get_orders.GetByIdUsecase, getAll *get_orders.GetByUserUsecase) *OrderHandler {
+func NewOrderHandler(
+	get *get_orders.GetByIdUsecase,
+	getAll *get_orders.GetByUserUsecase,
+	create *create_order.CreateOrderUsecase,
+) *OrderHandler {
+
 	return &OrderHandler{
 		getById:   get,
 		getByUser: getAll,
+		create:    create,
 	}
 }
 
@@ -89,6 +98,45 @@ func (h *OrderHandler) GetByUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	helpers.RespondJSON(w, http.StatusOK, response)
+}
+
+// Create godoc
+// @Summary Create an order
+// @Description Creates a new order, a message is sent to payment service
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Param X-User-ID header string true "User ID (UUID)"
+// @Param order_request body dto.CreateOrderRequest true "Request to create an order"
+// @Success 200 {object} dto.OrdersResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /orders [post]
+func (h *OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var dtoReq dto.CreateOrderRequest
+	if err := json.NewDecoder(r.Body).Decode(&dtoReq); err != nil {
+		helpers.RespondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	defer func() {
+		_ = r.Body.Close()
+	}()
+
+	ctx := r.Context()
+	userId := mymiddleware.UserIdFromContext(ctx)
+
+	req := mapper.OrderCreateRequestToApplication(dtoReq)
+
+	ordResp, err := h.create.Execute(ctx, req, userId)
+	if err != nil {
+		h.handleError(w, err)
+		return
+	}
+
+	dtoResp := mapper.OrderCreatedResponseToDto(ordResp)
+	helpers.RespondJSON(w, http.StatusCreated, dtoResp)
 }
 
 func (h *OrderHandler) handleError(w http.ResponseWriter, err error) {

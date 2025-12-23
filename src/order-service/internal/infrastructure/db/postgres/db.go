@@ -3,31 +3,44 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/jackc/pgx/v5/tracelog"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
 
-func New(cfg *Config) (*sqlx.DB, error) {
+func New(cfg *Config, logger *slog.Logger) (*sqlx.DB, error) {
 	dsn := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		cfg.Host,
-		cfg.Port,
+		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
 		cfg.User,
 		cfg.Password,
+		cfg.Host,
+		cfg.Port,
 		cfg.Name,
 		cfg.SSLMode,
 	)
 
-	db, err := sqlx.Open("postgres", dsn)
+	pgxCfg, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	db.SetMaxOpenConns(cfg.MaxOpenConns)
-	db.SetMaxIdleConns(cfg.MaxIdleConns)
-	db.SetConnMaxLifetime(cfg.ConnMaxLifetime)
+	pgxCfg.ConnConfig.Tracer = &tracelog.TraceLog{
+		Logger:   newPgxSlogAdapter(logger),
+		LogLevel: tracelog.LogLevelTrace,
+	}
+
+	pgxCfg.MaxConns = int32(cfg.MaxOpenConns)
+	pgxCfg.MinConns = int32(cfg.MaxIdleConns)
+	pgxCfg.MaxConnLifetime = cfg.ConnMaxLifetime
+
+	sqlDB := stdlib.OpenDB(*pgxCfg.ConnConfig)
+
+	db := sqlx.NewDb(sqlDB, "pgx")
 
 	if err := ping(db, 5*time.Second); err != nil {
 		return nil, err

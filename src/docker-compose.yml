@@ -1,0 +1,47 @@
+services:
+  orders-db:
+    image: postgres:17
+    container_name: orders-db-postgres
+    env_file:
+      - order-service/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - orders-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U dima_terekhov -d orders_db" ]
+      interval: 20s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
+
+  orders-db-migrate:
+    image: migrate/migrate
+    volumes:
+      - ./order-service/internal/infrastructure/db/postgres/migrations:/migrations
+    command: [
+      "-path", "/migrations",
+      "-database", "postgres://dima_terekhov:lowkey_tough@orders-db:5432/orders_db?sslmode=disable",
+      "up"
+    ]
+    depends_on:
+      orders-db:
+        condition: service_healthy
+
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: order-service
+    env_file:
+      - order-service/.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      orders-db:
+        condition: service_healthy
+      orders-db-migrate:
+        condition: service_completed_successfully
+
+volumes:
+  orders-db-data:

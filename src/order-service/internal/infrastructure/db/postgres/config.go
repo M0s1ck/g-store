@@ -1,8 +1,9 @@
 package postgres
 
 import (
-	"orders-service/internal/config"
 	"time"
+
+	"orders-service/internal/config"
 )
 
 type Config struct {

@@ -3,10 +3,11 @@ package middleware
 import (
 	"context"
 	"net/http"
-	"orders-service/internal/delivery/http/helpers"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+
+	"orders-service/internal/delivery/http/helpers"
 )
 
 func UUIDMiddleware(param string) func(http.Handler) http.Handler {

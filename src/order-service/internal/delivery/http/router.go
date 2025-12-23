@@ -31,6 +31,12 @@ func NewRouter(deps *RouterDeps) http.Handler {
 		r.Get("/", deps.OrderHandler.GetById)
 	})
 
+	router.Route("/v1/orders", func(r chi.Router) {
+		r.Use(mymiddleware.UserIdAuthMiddleware)
+		r.Use(mymiddleware.PaginationMiddleware(1, 20))
+		r.Get("/", deps.OrderHandler.GetByUser)
+	})
+
 	addHello(router)
 	addSwagger(router)
 

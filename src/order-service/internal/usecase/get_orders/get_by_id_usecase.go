@@ -3,21 +3,22 @@ package get_orders
 import (
 	"context"
 	"fmt"
-	"orders-service/internal/domain/entities"
-	derrors "orders-service/internal/domain/errors"
 
 	"github.com/google/uuid"
+
+	"orders-service/internal/domain/entities"
+	derrors "orders-service/internal/domain/errors"
 )
 
-type GetOrdersUsecase struct {
+type GetByIdUsecase struct {
 	repo OrderRepoGetter
 }
 
-func NewGetOrdersUsecase(repo OrderRepoGetter) *GetOrdersUsecase {
-	return &GetOrdersUsecase{repo: repo}
+func NewGetByIdUsecase(repo OrderRepoGetter) *GetByIdUsecase {
+	return &GetByIdUsecase{repo: repo}
 }
 
-func (uc *GetOrdersUsecase) GetById(
+func (uc *GetByIdUsecase) Execute(
 	ctx context.Context,
 	orderId uuid.UUID,
 	userId uuid.UUID,

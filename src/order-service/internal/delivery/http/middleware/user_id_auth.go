@@ -3,9 +3,10 @@ package middleware
 import (
 	"context"
 	"net/http"
-	"orders-service/internal/delivery/http/helpers"
 
 	"github.com/google/uuid"
+
+	"orders-service/internal/delivery/http/helpers"
 )
 
 func UserIdAuthMiddleware(next http.Handler) http.Handler {

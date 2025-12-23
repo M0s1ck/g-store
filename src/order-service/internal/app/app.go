@@ -3,6 +3,7 @@ package app
 import (
 	"log"
 	"net/http"
+
 	"orders-service/internal/config"
 	mydelivery "orders-service/internal/delivery/http"
 	"orders-service/internal/delivery/http/handlers"
@@ -20,9 +21,10 @@ func Build(conf *config.Config) *http.Handler {
 
 	orderRepo := repository.NewOrderRepository(ordersDb)
 
-	getUC := get_orders.NewGetOrdersUsecase(orderRepo)
+	getByIdUC := get_orders.NewGetByIdUsecase(orderRepo)
+	getByUserUC := get_orders.NewGetByUserUsecase(orderRepo)
 
-	orderHandler := handlers.NewOrderHandler(getUC)
+	orderHandler := handlers.NewOrderHandler(getByIdUC, getByUserUC)
 
 	router := mydelivery.NewRouter(&mydelivery.RouterDeps{
 		OrderHandler: orderHandler,

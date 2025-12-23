@@ -15,6 +15,70 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/orders": {
+            "get": {
+                "description": "Returns paginated list of orders for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Get all orders for user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID (UUID)",
+                        "name": "X-User-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.OrdersResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/orders/{id}": {
             "get": {
                 "description": "Returns order by UUID",
@@ -98,17 +162,13 @@ const docTemplate = `{
         "dto.OrderResponse": {
             "type": "object",
             "properties": {
-                "UpdatedAt": {
-                    "type": "string",
-                    "example": "2020-09-29T10:12:10+09:00"
-                },
                 "amount": {
                     "type": "integer",
                     "example": 19999
                 },
                 "createdAt": {
                     "type": "string",
-                    "example": "2020-09-29T10:10:10+09:00"
+                    "example": "2025-12-23T09:19:23.458426Z"
                 },
                 "id": {
                     "type": "string",
@@ -122,9 +182,33 @@ const docTemplate = `{
                     ],
                     "example": "PENDING"
                 },
+                "updatedAt": {
+                    "type": "string",
+                    "example": "2025-12-23T09:19:23.458426Z"
+                },
                 "userId": {
                     "type": "string",
                     "example": "550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
+        "dto.OrdersResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "orders": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.OrderResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },

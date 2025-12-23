@@ -5,7 +5,7 @@ import (
 	"orders-service/internal/domain/entities"
 )
 
-func ToResponse(order *entities.Order) *dto.OrderResponse {
+func OrderToResponse(order *entities.Order) *dto.OrderResponse {
 	return &dto.OrderResponse{
 		Id:        order.Id,
 		UserId:    order.UserId,
@@ -14,4 +14,13 @@ func ToResponse(order *entities.Order) *dto.OrderResponse {
 		CreatedAt: order.CreatedAt,
 		UpdatedAt: order.UpdatedAt,
 	}
+}
+
+func OrdersToResponse(orders []entities.Order) []dto.OrderResponse {
+	res := make([]dto.OrderResponse, len(orders))
+	for i := range orders {
+		res[i] = *OrderToResponse(&orders[i])
+	}
+
+	return res
 }

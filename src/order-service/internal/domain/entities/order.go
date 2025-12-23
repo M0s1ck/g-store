@@ -1,8 +1,10 @@
 package entities
 
-import "github.com/google/uuid"
+import (
+	"time"
 
-import "time"
+	"github.com/google/uuid"
+)
 
 type Order struct {
 	Id        uuid.UUID   `db:"id"`

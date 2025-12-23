@@ -1,10 +1,11 @@
 package dto
 
 import (
-	"orders-service/internal/domain/entities"
 	"time"
 
 	"github.com/google/uuid"
+
+	"orders-service/internal/domain/entities"
 )
 
 type OrderResponse struct {
@@ -13,5 +14,12 @@ type OrderResponse struct {
 	Amount    int64                `json:"amount" example:"19999"`
 	Status    entities.OrderStatus `json:"status" example:"PENDING"`
 	CreatedAt time.Time            `json:"createdAt" example:"2025-12-23T09:19:23.458426Z"`
-	UpdatedAt time.Time            `json:"UpdatedAt" example:"2025-12-23T09:19:23.458426Z"`
+	UpdatedAt time.Time            `json:"updatedAt" example:"2025-12-23T09:19:23.458426Z"`
+}
+
+type OrdersResponse struct {
+	Orders []OrderResponse `json:"orders"`
+	Total  int             `json:"total"`
+	Page   int             `json:"page"`
+	Limit  int             `json:"limit"`
 }

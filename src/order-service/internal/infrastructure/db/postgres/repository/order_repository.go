@@ -5,11 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"orders-service/internal/domain/entities"
-	derrors "orders-service/internal/domain/errors"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+
+	"orders-service/internal/domain/entities"
+	derrors "orders-service/internal/domain/errors"
 )
 
 type OrderRepository struct {
@@ -33,4 +34,25 @@ func (r *OrderRepository) GetById(ctx context.Context, id uuid.UUID) (*entities.
 	}
 
 	return &order, err
+}
+
+func (r *OrderRepository) GetByUserId(ctx context.Context, userId uuid.UUID, page, limit int) ([]entities.Order, int, error) {
+	var orders []entities.Order
+	err := r.db.SelectContext(ctx, &orders,
+		"SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3", userId, limit, (page-1)*limit)
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var total int
+	err = r.db.GetContext(ctx, &total,
+		`SELECT COUNT(*) FROM orders WHERE user_id = $1`,
+		userId,
+	)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return orders, total, nil
 }

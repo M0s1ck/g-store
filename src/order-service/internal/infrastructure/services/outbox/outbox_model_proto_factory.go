@@ -7,20 +7,23 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"orders-service/internal/domain/events"
+	"orders-service/internal/domain/messages"
 	myproto "orders-service/internal/infrastructure/services/proto"
-	"orders-service/internal/usecase/common/outbox"
 )
 
 type ModelProtoFactory struct {
+	orderCreatedEventTopic string
 }
 
-func NewOutboxModelProtoFactory() *ModelProtoFactory {
-	return &ModelProtoFactory{}
+func NewOutboxModelProtoFactory(eventTopic string) *ModelProtoFactory {
+	return &ModelProtoFactory{
+		orderCreatedEventTopic: eventTopic,
+	}
 }
 
-func (s *ModelProtoFactory) CreateOutboxModelFromOrderCreatedEvent(
+func (f *ModelProtoFactory) CreateOutboxModelFromOrderCreatedEvent(
 	event *events.OrderCreatedEvent,
-) (*outbox.Model, error) {
+) (*messages.OutboxMessage, error) {
 
 	eventProto := myproto.OrderCreatedEventToProto(event)
 
@@ -29,11 +32,11 @@ func (s *ModelProtoFactory) CreateOutboxModelFromOrderCreatedEvent(
 		return nil, err
 	}
 
-	return &outbox.Model{
+	return &messages.OutboxMessage{
 		Id:          uuid.New(),
 		Aggregate:   "order",
 		AggregateID: event.OrderId,
-		EventType:   "OrderCreated",
+		EventType:   f.orderCreatedEventTopic,
 		Payload:     payload,
 		CreatedAt:   time.Now(),
 	}, nil

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 
@@ -14,12 +15,19 @@ import (
 // @BasePath /v1
 // @schemes http https
 func main() {
+	log.Println("Service is starting...")
+
 	conf, err := config.Load()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	handler := app.Build(conf)
+	handler, publishWorker := app.Build(conf)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go publishWorker.Run(ctx)
 
 	log.Println("Server started!")
 

@@ -10,7 +10,6 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/jackc/pgx/v5/tracelog"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 )
 
 func New(cfg *Config, logger *slog.Logger) (*sqlx.DB, error) {

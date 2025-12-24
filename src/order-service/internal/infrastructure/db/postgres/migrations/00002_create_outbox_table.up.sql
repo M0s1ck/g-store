@@ -5,7 +5,8 @@ CREATE TABLE outbox (
     event_type    TEXT NOT NULL,
     payload       BYTEA NOT NULL,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    sent_at       TIMESTAMPTZ
+    sent_at       TIMESTAMPTZ,
+    retry_count   INT NOT NULL DEFAULT 0
 );
 
 -- fast search for unsent

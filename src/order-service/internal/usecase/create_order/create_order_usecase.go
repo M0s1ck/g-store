@@ -9,21 +9,20 @@ import (
 	"orders-service/internal/domain/entities"
 	"orders-service/internal/domain/events"
 	"orders-service/internal/usecase/common"
-	"orders-service/internal/usecase/common/outbox"
 )
 
 type CreateOrderUsecase struct {
 	txManager          common.TxManager
 	orderRepo          OrderRepoCreator
-	outboxRepo         outbox.Repository
-	outboxModelFactory outbox.ModelFactory
+	outboxRepo         Repository
+	outboxModelFactory OutboxMessageFactory
 }
 
 func NewCreateOrderUsecase(
 	txManager common.TxManager,
 	repo OrderRepoCreator,
-	outboxRepo outbox.Repository,
-	outboxModelFactory outbox.ModelFactory,
+	outboxRepo Repository,
+	outboxModelFactory OutboxMessageFactory,
 ) *CreateOrderUsecase {
 
 	return &CreateOrderUsecase{

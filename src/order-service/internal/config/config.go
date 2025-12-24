@@ -3,16 +3,14 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
 type Config struct {
 	HTTP     HTTPConfig
 	OrdersDB DBConfig
-}
-
-func NewConfig() *Config {
-	return &Config{}
+	Broker   BrokerConfig
 }
 
 func Load() (*Config, error) {
@@ -31,6 +29,10 @@ func Load() (*Config, error) {
 			MaxOpenConns:    getEnvInt("DB_MAX_OPEN_CONNS", 10),
 			MaxIdleConns:    getEnvInt("DB_MAX_IDLE_CONNS", 5),
 			ConnMaxLifetime: getEnvDuration("DB_CONN_MAX_LIFETIME", 30*time.Second),
+		},
+		Broker: BrokerConfig{
+			Brokers:           strings.Split(os.Getenv("BROKER_HOST"), ","),
+			OrderCreatedTopic: os.Getenv("BROKER_ORDER_CREATED_TOPIC"),
 		},
 	}
 

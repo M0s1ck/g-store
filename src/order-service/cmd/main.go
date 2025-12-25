@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"orders-service/internal/infrastructure/workers"
 
 	"orders-service/internal/app"
 	"orders-service/internal/config"
@@ -22,16 +23,25 @@ func main() {
 		log.Fatal(err)
 	}
 
-	handler, publishWorker := app.Build(conf)
+	handler, backWorkers := app.Build(conf)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	go publishWorker.Run(ctx)
+	// launching background workers
+	for _, worker := range backWorkers {
+		go func(worker workers.BackgroundWorker) {
+			err := worker.Run(ctx)
+			if err != nil {
+				log.Printf("worker stopped with error: %v", err)
+				cancel() // if one has error - shutdown
+			}
+		}(worker)
+	}
 
 	log.Println("Server started!")
 
-	err = http.ListenAndServe(":8080", *handler)
+	err = http.ListenAndServe(conf.HTTP.Addr, handler)
 	if err != nil {
 		panic(err)
 	}

@@ -25,16 +25,17 @@ func NewOutboxPublishWorker(
 	}
 }
 
-func (w *OutboxPublishWorker) Run(ctx context.Context) {
+func (w *OutboxPublishWorker) Run(ctx context.Context) error {
 	log.Println("Starting outbox publish worker")
 
 	for {
 		select {
 		case <-ctx.Done():
-			return
+			return nil
 		case <-w.ticker.C:
 			if err := w.publisher.Publish(ctx, batchSize); err != nil {
 				log.Println("Failed to publish outbox worker:", err)
+				return err
 			}
 		}
 	}

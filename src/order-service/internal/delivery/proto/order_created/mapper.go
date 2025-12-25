@@ -1,4 +1,4 @@
-package proto
+package order_created
 
 import (
 	"google.golang.org/protobuf/types/known/timestamppb"

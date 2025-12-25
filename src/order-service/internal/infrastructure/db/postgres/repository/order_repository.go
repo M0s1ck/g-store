@@ -72,6 +72,12 @@ func (r *OrderRepository) Create(ctx context.Context, order *entities.Order) err
 	return err
 }
 
+func (r *OrderRepository) UpdateStatus(ctx context.Context, order *entities.Order) error {
+	exec := r.getExec(ctx)
+	_, err := exec.ExecContext(ctx, "UPDATE orders SET status = $1", order.Status)
+	return err
+}
+
 // returns sqlx.TX if we're in transaction or r.db if not
 func (r *OrderRepository) getExec(ctx context.Context) sqlx.ExtContext {
 	if tx, ok := ctx.Value(postgres.TxKey{}).(*sqlx.Tx); ok {

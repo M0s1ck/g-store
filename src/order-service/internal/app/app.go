@@ -3,23 +3,26 @@ package app
 import (
 	"log"
 	"net/http"
+	"orders-service/internal/delivery/proto/outbox"
+	kafka2 "orders-service/internal/infrastructure/messaging/kafka"
+	"orders-service/internal/usecase/event_handlers"
+	"orders-service/internal/usecase/event_handlers/payment_processed"
 	"time"
 
 	"orders-service/internal/config"
 	mydelivery "orders-service/internal/delivery/http"
 	"orders-service/internal/delivery/http/handlers"
+	protopayment "orders-service/internal/delivery/proto/payment_processed"
 	"orders-service/internal/infrastructure/db/postgres"
 	"orders-service/internal/infrastructure/db/postgres/repository"
-	"orders-service/internal/infrastructure/messaging/publish/kafka"
 	servlogger "orders-service/internal/infrastructure/services/logger"
-	"orders-service/internal/infrastructure/services/outbox"
 	"orders-service/internal/infrastructure/workers"
 	"orders-service/internal/usecase/create_order"
 	"orders-service/internal/usecase/get_orders"
 	"orders-service/internal/usecase/publish/outbox_publish"
 )
 
-func Build(conf *config.Config) (*http.Handler, *workers.OutboxPublishWorker) {
+func Build(conf *config.Config) (http.Handler, []workers.BackgroundWorker) {
 	psgConf := postgres.NewConfig(conf)
 	logger := servlogger.NewSlogLogger()
 	ordersDb, err := postgres.New(psgConf, logger)
@@ -28,9 +31,9 @@ func Build(conf *config.Config) (*http.Handler, *workers.OutboxPublishWorker) {
 		log.Fatal(err)
 	}
 
-	kafkaConfig := kafka.NewKafkaConfig(&conf.Broker)
-	orderWriter := kafka.NewKafkaWriter(kafkaConfig, kafkaConfig.OrderEventsTopic)
-	kafkaProducer := kafka.NewProducer(orderWriter)
+	kafkaConfig := kafka2.NewKafkaConfig(&conf.Broker)
+	orderWriter := kafka2.NewKafkaWriter(kafkaConfig, kafkaConfig.OrderEventsTopic)
+	kafkaProducer := kafka2.NewProducer(orderWriter)
 
 	orderRepo := repository.NewOrderRepository(ordersDb)
 	outboxRepo := repository.NewOutboxRepository(ordersDb)
@@ -53,5 +56,25 @@ func Build(conf *config.Config) (*http.Handler, *workers.OutboxPublishWorker) {
 		OrderHandler: orderHandler,
 	})
 
-	return &router, publishWorker
+	paymentReader := kafka2.NewKafkaReader(kafkaConfig, kafkaConfig.PaymentEventsTopic)
+
+	protoPaymentProcessedMapper := protopayment.NewPayloadMapper()
+
+	paymentProcessedEventHandler := payment_processed.NewPaymentProcessedEventHandler(
+		kafkaConfig.PaymentProcessedEventType, orderRepo, protoPaymentProcessedMapper)
+
+	hands := []event_handlers.EventHandler{
+		paymentProcessedEventHandler,
+	}
+
+	msgProcessor := event_handlers.NewEventMsgProcessor(hands)
+
+	kafkaConsumerWorker := workers.NewKafkaConsumerWorker(paymentReader, msgProcessor)
+
+	bWorkers := []workers.BackgroundWorker{
+		publishWorker,
+		kafkaConsumerWorker,
+	}
+
+	return router, bWorkers
 }

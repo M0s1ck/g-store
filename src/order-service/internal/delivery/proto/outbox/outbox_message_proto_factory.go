@@ -1,6 +1,7 @@
 package outbox
 
 import (
+	myproto "orders-service/internal/delivery/proto/order_created"
 	"time"
 
 	"github.com/google/uuid"
@@ -8,20 +9,19 @@ import (
 
 	"orders-service/internal/domain/events"
 	"orders-service/internal/domain/messages"
-	myproto "orders-service/internal/infrastructure/services/proto"
 )
 
-type ModelProtoFactory struct {
+type MessageProtoFactory struct {
 	orderCreatedEventType string
 }
 
-func NewOutboxModelProtoFactory(orderCreatedEventName string) *ModelProtoFactory {
-	return &ModelProtoFactory{
+func NewOutboxModelProtoFactory(orderCreatedEventName string) *MessageProtoFactory {
+	return &MessageProtoFactory{
 		orderCreatedEventType: orderCreatedEventName,
 	}
 }
 
-func (f *ModelProtoFactory) CreateOutboxModelFromOrderCreatedEvent(
+func (f *MessageProtoFactory) CreateOutboxModelFromOrderCreatedEvent(
 	event *events.OrderCreatedEvent,
 ) (*messages.OutboxMessage, error) {
 

@@ -12,6 +12,7 @@ import (
 	"payment-service/internal/infrastructure/db/postgres/repository"
 	"payment-service/internal/infrastructure/messaging/consume/kafka"
 	servlogger "payment-service/internal/infrastructure/services/logger"
+	myproto "payment-service/internal/infrastructure/services/proto"
 	"payment-service/internal/usecase/inbox"
 	"payment-service/internal/usecase/order_created"
 )
@@ -27,16 +28,24 @@ func Build(conf *config.Config) (http.Handler, []background_workers.BackgroundWo
 
 	txManager := postgres.NewTxManager(paymentsDb)
 	inboxRepo := repository.NewInboxRepository(paymentsDb)
+	accountRepo := repository.NewAccountRepository(paymentsDb)
+	balanceTransactionRepo := repository.NewBalanceTransactionRepository(paymentsDb)
 
 	router := delivery.NewRouter(&delivery.RouterDeps{})
+
+	protoMapper := myproto.NewPayloadMapper()
 
 	kafkaConfig := kafka.NewKafkaConfig(&conf.Broker)
 	kafkaReader := kafka.NewKafkaOrderCreatedReader(kafkaConfig)
 
 	kafkaConsumerWorker := kafka.NewInboxKafkaConsumerWorker(inboxRepo, kafkaReader)
 
-	orderCreatedEventHandler :=
-		order_created.NewOrderCreatedEventHandler(kafkaConfig.OrderCreatedEventType)
+	orderCreatedEventHandler := order_created.NewOrderCreatedEventHandler(
+		accountRepo,
+		balanceTransactionRepo,
+		protoMapper,
+		kafkaConfig.OrderCreatedEventType,
+	)
 
 	messageHandlers := []inbox.MessageHandler{
 		orderCreatedEventHandler,

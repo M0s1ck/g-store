@@ -44,10 +44,16 @@ func (c *InboxKafkaConsumerWorker) Run(ctx context.Context) error {
 			continue
 		}
 
+		eventType := getHeader(msg, eventTypeHeaderName)
+		if eventType == "" {
+			log.Printf("missing event_type for msg %v", mesId)
+			continue
+		}
+
 		inboxMsg := messages.InboxMessage{
 			Id:        mesId,
 			Topic:     msg.Topic,
-			EventType: getHeader(msg, eventTypeHeaderName),
+			EventType: eventType,
 			Key:       msg.Key,
 			Payload:   msg.Value,
 		}

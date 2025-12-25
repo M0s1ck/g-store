@@ -40,7 +40,6 @@ func (r *InboxRepository) GetUnprocessed(ctx context.Context, limit int) ([]mess
 		WHERE processed_at IS NULL
 		ORDER BY created_at
 		LIMIT $1
-		FOR UPDATE SKIP LOCKED
 	`, limit)
 
 	return msgs, err
@@ -50,6 +49,12 @@ func (r *InboxRepository) MarkProcessed(ctx context.Context, id uuid.UUID) error
 	exec := r.getExec(ctx)
 	_, err := exec.ExecContext(ctx,
 		`UPDATE inbox SET processed_at = now() WHERE id = $1`, id)
+	return err
+}
+
+func (r *InboxRepository) LockByID(ctx context.Context, id uuid.UUID) error {
+	exec := r.getExec(ctx)
+	_, err := exec.ExecContext(ctx, "SELECT * FROM inbox WHERE id = $1 FOR UPDATE SKIP LOCKED", id)
 	return err
 }
 

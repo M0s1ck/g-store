@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package payments;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "payment-service/internal/infrastructure/services/proto;proto";
+
+message PaymentProcessedEvent {
+string message_id = 1;
+string order_id   = 2;
+string user_id    = 3;
+int64  amount     = 4;
+
+PaymentStatus status = 5;
+
+// nullable field (proto3 optional)
+optional PaymentFailureReason payment_failure_reason = 6;
+
+google.protobuf.Timestamp occurred_at = 7;
+}
+
+enum PaymentStatus {
+PAYMENT_STATUS_UNSPECIFIED = 0;
+PAYMENT_STATUS_SUCCESS     = 1;
+PAYMENT_STATUS_FAILED      = 2;
+}
+
+enum PaymentFailureReason {
+PAYMENT_FAILURE_REASON_UNSPECIFIED = 0;
+PAYMENT_FAILURE_REASON_NO_ACCOUNT = 1;
+PAYMENT_FAILURE_REASON_INSUFFICIENT_FUNDS = 2;
+PAYMENT_FAILURE_REASON_INTERNAL_ERROR = 3;
+}
+

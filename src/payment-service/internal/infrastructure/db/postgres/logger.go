@@ -31,6 +31,14 @@ func (l *pgxSlogAdapter) Log(
 		}
 	}
 
+	// don't log polly unsent from outbox
+	if sql, ok := data["sql"].(string); ok {
+		if strings.Contains(sql, "FROM outbox") &&
+			strings.Contains(sql, "sent_at IS NULL") {
+			return
+		}
+	}
+
 	// don't log tx commands cause of polly inbox using it
 	if tag, ok := data["commandTag"].(string); ok {
 		switch tag {

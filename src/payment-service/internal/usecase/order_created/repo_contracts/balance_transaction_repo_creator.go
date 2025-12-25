@@ -1,4 +1,4 @@
-package order_created
+package repo_contracts
 
 import (
 	"context"

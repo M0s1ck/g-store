@@ -1,4 +1,4 @@
-package proto
+package proto_order_created
 
 import (
 	"log"

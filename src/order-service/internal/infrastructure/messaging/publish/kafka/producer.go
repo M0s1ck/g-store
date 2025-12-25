@@ -20,8 +20,17 @@ func NewProducer(writer *kafka.Writer) *Producer {
 
 func (k *Producer) Publish(ctx context.Context, msg *messages.OutboxMessage) error {
 	return k.writer.WriteMessages(ctx, kafka.Message{
-		Topic: msg.EventType,
 		Key:   msg.Id[:],
 		Value: msg.Payload,
+		Headers: []kafka.Header{
+			{
+				Key:   "message_id",
+				Value: []byte(msg.Id.String()),
+			},
+			{
+				Key:   "event_type",
+				Value: []byte(msg.EventType),
+			},
+		},
 	})
 }

@@ -69,7 +69,7 @@ services:
     entrypoint: [ "sh", "-c" ]
     command: |
       "
-      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic order.created --partitions 1 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic order-events --partitions 1 --replication-factor 1
       "
     restart: "no"
 
@@ -92,6 +92,54 @@ services:
       kafka-init:
         condition: service_completed_successfully
 
+  payments-db:
+    image: postgres:17
+    container_name: payments-db-postgres
+    env_file:
+      - payment-service/.env
+    ports:
+      - "5433:5432"
+    volumes:
+      - payments-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U vlad_bukharin -d payments_db" ]
+      interval: 20s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
+
+  payments-db-migrate:
+    image: migrate/migrate
+    volumes:
+      - ./payment-service/internal/infrastructure/db/postgres/migrations:/migrations
+    command: [
+      "-path", "/migrations",
+      "-database", "postgres://vlad_bukharin:lowkey_tough@payments-db:5432/payments_db?sslmode=disable",
+      "up"
+    ]
+    depends_on:
+      payments-db:
+        condition: service_healthy
+
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    container_name: payment-service
+    env_file:
+      - payment-service/.env
+    ports:
+      - "8088:8080"
+    depends_on:
+      payments-db:
+        condition: service_healthy
+      payments-db-migrate:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     ports:
@@ -104,3 +152,4 @@ services:
 
 volumes:
   orders-db-data:
+  payments-db-data:

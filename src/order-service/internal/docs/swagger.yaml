@@ -111,6 +111,7 @@ paths:
       description: Creates a new order, a message is sent to payment service
       parameters:
       - description: User ID (UUID)
+        example: '"123e4567-e89b-12d3-a456-426614174000"'
         in: header
         name: X-User-ID
         required: true

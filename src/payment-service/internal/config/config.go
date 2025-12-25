@@ -8,9 +8,9 @@ import (
 )
 
 type Config struct {
-	HTTP     HTTPConfig
-	OrdersDB DBConfig
-	Broker   BrokerConfig
+	HTTP       HTTPConfig
+	PaymentsDB DBConfig
+	Broker     BrokerConfig
 }
 
 func Load() (*Config, error) {
@@ -18,7 +18,7 @@ func Load() (*Config, error) {
 		HTTP: HTTPConfig{
 			Addr: getEnv("HTTP_ADDR", ":8080"),
 		},
-		OrdersDB: DBConfig{
+		PaymentsDB: DBConfig{
 			Host:     os.Getenv("DB_HOST"),
 			Port:     os.Getenv("DB_PORT"),
 			Name:     os.Getenv("DB_NAME"),
@@ -33,6 +33,7 @@ func Load() (*Config, error) {
 		Broker: BrokerConfig{
 			Brokers:               strings.Split(os.Getenv("BROKER_HOST"), ","),
 			OrderEventsTopic:      os.Getenv("BROKER_ORDER_EVENTS_TOPIC"),
+			ConsumerGroup:         os.Getenv("BROKER_CONSUMER_GROUP"),
 			OrderCreatedEventType: os.Getenv("BROKER_ORDER_CREATED_EVENT_TYPE"),
 		},
 	}

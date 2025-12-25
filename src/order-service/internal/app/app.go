@@ -29,14 +29,14 @@ func Build(conf *config.Config) (*http.Handler, *workers.OutboxPublishWorker) {
 	}
 
 	kafkaConfig := kafka.NewKafkaConfig(&conf.Broker)
-	kafkaWriter := kafka.NewKafkaWriter(kafkaConfig)
-	kafkaProducer := kafka.NewProducer(kafkaWriter)
+	orderWriter := kafka.NewKafkaWriter(kafkaConfig, kafkaConfig.OrderEventsTopic)
+	kafkaProducer := kafka.NewProducer(orderWriter)
 
 	orderRepo := repository.NewOrderRepository(ordersDb)
 	outboxRepo := repository.NewOutboxRepository(ordersDb)
 	txManager := postgres.NewTxManager(ordersDb)
 
-	outboxModelFactory := outbox.NewOutboxModelProtoFactory(kafkaConfig.OrderCreatedTopic)
+	outboxModelFactory := outbox.NewOutboxModelProtoFactory(kafkaConfig.OrderCreatedEventType)
 
 	getByIdUC := get_orders.NewGetByIdUsecase(orderRepo)
 	getByUserUC := get_orders.NewGetByUserUsecase(orderRepo)

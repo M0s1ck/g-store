@@ -2,6 +2,7 @@ package create_order
 
 import (
 	"context"
+	"orders-service/internal/domain/errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -40,6 +41,10 @@ func (uc *CreateOrderUsecase) Execute(
 ) (*CreateOrderResponse, error) {
 
 	order := uc.getOrderFromRequest(request, userId)
+
+	if order.Amount <= 0 {
+		return nil, errors.ErrAmountNotPositive
+	}
 
 	err := uc.txManager.WithinTx(ctx, func(ctx context.Context) error {
 

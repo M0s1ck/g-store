@@ -23,15 +23,15 @@ func (l *pgxSlogAdapter) Log(
 	data map[string]any,
 ) {
 
-	// don't log polly unsent from outbox
+	// don't log polly unprocessed from inbox
 	if sql, ok := data["sql"].(string); ok {
-		if strings.Contains(sql, "FROM outbox") &&
-			strings.Contains(sql, "sent_at IS NULL") {
+		if strings.Contains(sql, "FROM inbox") &&
+			strings.Contains(sql, "processed_at IS NULL") {
 			return
 		}
 	}
 
-	// don't log tx commands cause of polly outbox using it
+	// don't log tx commands cause of polly inbox using it
 	if tag, ok := data["commandTag"].(string); ok {
 		switch tag {
 		case "BEGIN", "COMMIT", "ROLLBACK":

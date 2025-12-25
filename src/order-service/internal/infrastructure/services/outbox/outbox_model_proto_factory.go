@@ -12,12 +12,12 @@ import (
 )
 
 type ModelProtoFactory struct {
-	orderCreatedEventTopic string
+	orderCreatedEventType string
 }
 
-func NewOutboxModelProtoFactory(eventTopic string) *ModelProtoFactory {
+func NewOutboxModelProtoFactory(orderCreatedEventName string) *ModelProtoFactory {
 	return &ModelProtoFactory{
-		orderCreatedEventTopic: eventTopic,
+		orderCreatedEventType: orderCreatedEventName,
 	}
 }
 
@@ -36,7 +36,7 @@ func (f *ModelProtoFactory) CreateOutboxModelFromOrderCreatedEvent(
 		Id:          uuid.New(),
 		Aggregate:   "order",
 		AggregateID: event.OrderId,
-		EventType:   f.orderCreatedEventTopic,
+		EventType:   f.orderCreatedEventType,
 		Payload:     payload,
 		CreatedAt:   time.Now(),
 	}, nil

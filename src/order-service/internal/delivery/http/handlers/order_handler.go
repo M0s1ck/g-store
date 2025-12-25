@@ -106,7 +106,7 @@ func (h *OrderHandler) GetByUser(w http.ResponseWriter, r *http.Request) {
 // @Tags orders
 // @Accept json
 // @Produce json
-// @Param X-User-ID header string true "User ID (UUID)"
+// @Param X-User-ID header string true "User ID (UUID)" example("123e4567-e89b-12d3-a456-426614174000")
 // @Param order_request body dto.CreateOrderRequest true "Request to create an order"
 // @Success 200 {object} dto.OrdersResponse
 // @Failure 400 {object} dto.ErrorResponse
@@ -146,6 +146,9 @@ func (h *OrderHandler) handleError(w http.ResponseWriter, err error) {
 
 	case errors.Is(err, derrors.ErrForbidden):
 		helpers.RespondError(w, http.StatusForbidden, err.Error())
+
+	case errors.Is(err, derrors.ErrAmountNotPositive):
+		helpers.RespondError(w, http.StatusBadRequest, err.Error())
 
 	default:
 		helpers.RespondError(w, http.StatusInternalServerError, "internal error: "+err.Error())

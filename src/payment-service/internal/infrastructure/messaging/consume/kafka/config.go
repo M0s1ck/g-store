@@ -1,11 +1,14 @@
 package kafka
 
-import "orders-service/internal/config"
+import (
+	"payment-service/internal/config"
+)
 
 type Config struct {
 	Brokers               []string
 	OrderEventsTopic      string
 	OrderCreatedEventType string
+	ConsumerGroup         string
 }
 
 func NewKafkaConfig(conf *config.BrokerConfig) *Config {
@@ -13,5 +16,6 @@ func NewKafkaConfig(conf *config.BrokerConfig) *Config {
 		Brokers:               conf.Brokers,
 		OrderEventsTopic:      conf.OrderEventsTopic,
 		OrderCreatedEventType: conf.OrderCreatedEventType,
+		ConsumerGroup:         conf.ConsumerGroup,
 	}
 }

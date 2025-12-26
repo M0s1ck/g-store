@@ -9,7 +9,7 @@ import (
 
 	"orders-service/internal/delivery/http/handlers"
 	mymiddleware "orders-service/internal/delivery/http/middleware"
-	_ "orders-service/internal/docs"
+	"orders-service/internal/docs"
 )
 
 type RouterDeps struct {
@@ -54,6 +54,19 @@ func addHello(r *chi.Mux) {
 	})
 }
 
-func addSwagger(r *chi.Mux) {
-	r.Get("/swagger/*", httpSwagger.WrapHandler)
+func addSwagger(r chi.Router) {
+	r.Get("/swagger/*", func(w http.ResponseWriter, req *http.Request) {
+		// Подставляем host динамически
+		docs.SwaggerInfo.Host = req.Host
+		docs.SwaggerInfo.Schemes = []string{"http"}
+
+		// Учитываем gateway prefix
+		if p := req.Header.Get("X-Forwarded-Prefix"); p != "" {
+			docs.SwaggerInfo.BasePath = p + "/v1"
+		} else {
+			docs.SwaggerInfo.BasePath = "/v1"
+		}
+
+		httpSwagger.WrapHandler(w, req)
+	})
 }

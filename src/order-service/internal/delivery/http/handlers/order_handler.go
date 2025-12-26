@@ -108,7 +108,7 @@ func (h *OrderHandler) GetByUser(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param X-User-ID header string true "User ID (UUID)" example("123e4567-e89b-12d3-a456-426614174000")
 // @Param order_request body dto.CreateOrderRequest true "Request to create an order"
-// @Success 200 {object} dto.OrdersResponse
+// @Success 201 {object} dto.OrderCreatedResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse

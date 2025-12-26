@@ -7,6 +7,10 @@ import (
 	"orders-service/internal/domain/entities"
 )
 
+const (
+	successDesc = "the order is paid"
+)
+
 type PaymentProcessedEventHandler struct {
 	orderRepo                 OrderRepoStatusUpdater
 	paymentProcessedEventType string

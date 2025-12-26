@@ -15,5 +15,5 @@ type AccountResponse struct {
 }
 
 type AccountCreatedResponse struct {
-	AccountID uuid.UUID `json:"id" example:"550e8400-e29b-41d4-a716-446655440000"`
+	AccountID uuid.UUID `json:"AccountID" example:"550e8400-e29b-41d4-a716-446655440000"`
 }

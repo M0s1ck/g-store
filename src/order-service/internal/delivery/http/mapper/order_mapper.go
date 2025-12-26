@@ -8,12 +8,13 @@ import (
 
 func OrderToResponse(order *entities.Order) *dto.OrderResponse {
 	return &dto.OrderResponse{
-		Id:        order.Id,
-		UserId:    order.UserId,
-		Amount:    order.Amount,
-		Status:    order.Status,
-		CreatedAt: order.CreatedAt,
-		UpdatedAt: order.UpdatedAt,
+		Id:          order.Id,
+		UserId:      order.UserId,
+		Amount:      order.Amount,
+		Status:      order.Status,
+		Description: order.Description,
+		CreatedAt:   order.CreatedAt,
+		UpdatedAt:   order.UpdatedAt,
 	}
 }
 

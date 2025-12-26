@@ -75,7 +75,7 @@ func (r *OrderRepository) Create(ctx context.Context, order *entities.Order) err
 func (r *OrderRepository) UpdateStatus(ctx context.Context, order *entities.Order) error {
 	exec := r.getExec(ctx)
 	_, err := exec.ExecContext(ctx,
-		"UPDATE orders SET status = $1, description = $2 WHERE id = $1",
+		"UPDATE orders SET status = $1, description = $2 WHERE id = $3",
 		order.Status, order.Description, order.Id)
 	return err
 }

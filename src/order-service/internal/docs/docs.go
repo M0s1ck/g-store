@@ -110,10 +110,10 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.OrdersResponse"
+                            "$ref": "#/definitions/dto.OrderCreatedResponse"
                         }
                     },
                     "400": {
@@ -225,6 +225,15 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.OrderCreatedResponse": {
+            "type": "object",
+            "properties": {
+                "OrderID": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
         "dto.OrderResponse": {
             "type": "object",
             "properties": {
@@ -235,6 +244,10 @@ const docTemplate = `{
                 "createdAt": {
                     "type": "string",
                     "example": "2025-12-23T09:19:23.458426Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "This is a description"
                 },
                 "id": {
                     "type": "string",
@@ -283,12 +296,12 @@ const docTemplate = `{
             "enum": [
                 "PENDING",
                 "PAID",
-                "FAILED"
+                "CANCELED"
             ],
             "x-enum-varnames": [
                 "OrderPending",
                 "OrderPaid",
-                "OrderFailed"
+                "OrderCanceled"
             ]
         }
     }

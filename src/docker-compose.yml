@@ -141,6 +141,16 @@ services:
       kafka-init:
         condition: service_completed_successfully
 
+  api-gateway:
+    build:
+      context: api-gateway/
+    container_name: api-gateway
+    ports:
+      - "80:80"
+    depends_on:
+      - order-service
+      - payment-service
+
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     ports:

@@ -277,6 +277,8 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "Payment microservice",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
+	LeftDelim:        "{{",
+	RightDelim:       "}}",
 }
 
 func init() {

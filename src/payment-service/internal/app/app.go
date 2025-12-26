@@ -3,21 +3,25 @@ package app
 import (
 	"log"
 	"net/http"
-	kafka2 "payment-service/internal/infrastructure/messaging/kafka"
-	"payment-service/internal/infrastructure/services/proto/proto_order_created"
-	"payment-service/internal/infrastructure/services/proto/proto_payment_processed"
-	"payment-service/internal/usecase/common/outbox"
-	outboxuc "payment-service/internal/usecase/outbox"
 	"time"
 
 	"payment-service/internal/config"
-	"payment-service/internal/delivery"
+	httpdelivery "payment-service/internal/delivery/http"
+	"payment-service/internal/delivery/http/handlers"
 	"payment-service/internal/infrastructure/background_workers"
 	"payment-service/internal/infrastructure/db/postgres"
 	"payment-service/internal/infrastructure/db/postgres/repository"
+	kafka2 "payment-service/internal/infrastructure/messaging/kafka"
 	servlogger "payment-service/internal/infrastructure/services/logger"
+	"payment-service/internal/infrastructure/services/proto/proto_order_created"
+	"payment-service/internal/infrastructure/services/proto/proto_payment_processed"
+	"payment-service/internal/usecase/common/outbox"
+	"payment-service/internal/usecase/create_account"
+	"payment-service/internal/usecase/get_account"
 	"payment-service/internal/usecase/inbox"
 	"payment-service/internal/usecase/order_created"
+	outboxuc "payment-service/internal/usecase/outbox"
+	"payment-service/internal/usecase/top_up"
 )
 
 func Build(conf *config.Config) (http.Handler, []background_workers.BackgroundWorker) {
@@ -35,7 +39,15 @@ func Build(conf *config.Config) (http.Handler, []background_workers.BackgroundWo
 	balanceTransactionRepo := repository.NewBalanceTransactionRepository(paymentsDb)
 	outboxRepo := repository.NewOutboxRepository(paymentsDb)
 
-	router := delivery.NewRouter(&delivery.RouterDeps{})
+	getAccUC := get_account.NewGetByIdUsecase(accountRepo)
+	createAccUC := create_account.NewCreateAccountUsecase(accountRepo)
+	topUpUC := top_up.NewTopUpUsecase(accountRepo, balanceTransactionRepo, txManager)
+
+	accountHandler := handlers.NewAccountHandler(getAccUC, createAccUC, topUpUC)
+
+	router := httpdelivery.NewRouter(&httpdelivery.RouterDeps{
+		AccountHandler: accountHandler,
+	})
 
 	protoOrderMapper := proto_order_created.NewPayloadMapper()
 	protoPaymentMapper := proto_payment_processed.NewPayloadMapper()

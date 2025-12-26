@@ -3,11 +3,12 @@ package repository
 import (
 	"context"
 	"log"
-	"payment-service/internal/domain/messages"
-	"payment-service/internal/infrastructure/db/postgres"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+
+	"payment-service/internal/domain/messages"
+	"payment-service/internal/infrastructure/db/postgres"
 )
 
 type OutboxRepository struct {

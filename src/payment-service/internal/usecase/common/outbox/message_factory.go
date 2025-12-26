@@ -1,9 +1,10 @@
 package outbox
 
 import (
+	"time"
+
 	"payment-service/internal/domain/events"
 	"payment-service/internal/domain/messages"
-	"time"
 )
 
 type MessageFactory struct {

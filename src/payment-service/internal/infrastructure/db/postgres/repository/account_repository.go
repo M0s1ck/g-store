@@ -5,12 +5,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jmoiron/sqlx"
+
 	"payment-service/internal/domain/entities"
 	myerrors "payment-service/internal/domain/errors"
 	"payment-service/internal/infrastructure/db/postgres"
-
-	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 )
 
 type AccountRepository struct {
@@ -71,6 +73,22 @@ func (r *AccountRepository) UpdateBalance(ctx context.Context, account *entities
 	}
 
 	return nil
+}
+
+func (r *AccountRepository) Create(ctx context.Context, account *entities.Account) error {
+	exec := r.getExec(ctx)
+	_, err := exec.ExecContext(ctx,
+		"INSERT INTO accounts (id, user_id) VALUES ($1, $2)",
+		account.ID, account.UserID)
+
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		if pgErr.Code == "23505" {
+			return myerrors.ErrAccountForUserAlreadyExists
+		}
+	}
+
+	return err
 }
 
 // returns sqlx.TX if we're in transaction or r.db if not

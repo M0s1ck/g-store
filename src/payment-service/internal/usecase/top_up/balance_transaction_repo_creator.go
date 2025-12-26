@@ -1,4 +1,4 @@
-package repo_contracts
+package top_up
 
 import (
 	"context"

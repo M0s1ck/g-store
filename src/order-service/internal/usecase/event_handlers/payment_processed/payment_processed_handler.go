@@ -3,6 +3,7 @@ package payment_processed
 import (
 	"context"
 	"log"
+
 	"orders-service/internal/domain/entities"
 )
 
@@ -46,8 +47,7 @@ func (p *PaymentProcessedEventHandler) Handle(ctx context.Context, payload []byt
 		return p.orderRepo.UpdateStatus(ctx, order)
 	}
 
-	// TODO: maybe add cancellation reason
-
+	order.Description = (*string)(event.PaymentFailureReason)
 	order.Status = entities.OrderCanceled
 	return p.orderRepo.UpdateStatus(ctx, order)
 }

@@ -4,16 +4,16 @@ import (
 	"context"
 	"errors"
 	"log"
+	"time"
+
+	"github.com/google/uuid"
+
 	"payment-service/internal/domain/entities"
 	myerrors "payment-service/internal/domain/errors"
 	"payment-service/internal/domain/events"
+	"payment-service/internal/domain/messages"
 	"payment-service/internal/usecase/common/outbox"
 	"payment-service/internal/usecase/order_created/repo_contracts"
-	"time"
-
-	"payment-service/internal/domain/messages"
-
-	"github.com/google/uuid"
 )
 
 type OrderCreatedEventHandler struct {

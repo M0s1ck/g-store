@@ -2,9 +2,10 @@ package kafka
 
 import (
 	"context"
-	"payment-service/internal/domain/messages"
 
 	"github.com/segmentio/kafka-go"
+
+	"payment-service/internal/domain/messages"
 )
 
 type Producer struct {

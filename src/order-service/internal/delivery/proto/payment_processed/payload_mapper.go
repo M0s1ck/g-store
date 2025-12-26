@@ -2,11 +2,12 @@ package payment_processed
 
 import (
 	"fmt"
-	"orders-service/internal/usecase/event_handlers/payment_processed"
 	"time"
 
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/proto"
+
+	"orders-service/internal/usecase/event_handlers/payment_processed"
 )
 
 type PayloadMapper struct {

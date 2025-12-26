@@ -1,12 +1,12 @@
 package outbox
 
 import (
-	myproto "orders-service/internal/delivery/proto/order_created"
 	"time"
 
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/proto"
 
+	myproto "orders-service/internal/delivery/proto/order_created"
 	"orders-service/internal/domain/events"
 	"orders-service/internal/domain/messages"
 )

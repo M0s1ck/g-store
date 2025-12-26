@@ -1,10 +1,10 @@
 package proto_payment_processed
 
 import (
-	"payment-service/internal/domain/events"
-
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"payment-service/internal/domain/events"
 )
 
 type PayloadMapper struct {

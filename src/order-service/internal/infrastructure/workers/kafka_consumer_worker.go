@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"log"
-	"orders-service/internal/usecase/event_handlers"
 
 	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
+
+	"orders-service/internal/usecase/event_handlers"
 )
 
 const (

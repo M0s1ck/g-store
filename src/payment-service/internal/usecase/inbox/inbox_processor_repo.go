@@ -2,9 +2,10 @@ package inbox
 
 import (
 	"context"
-	"payment-service/internal/domain/messages"
 
 	"github.com/google/uuid"
+
+	"payment-service/internal/domain/messages"
 )
 
 type ProcessorRepo interface {

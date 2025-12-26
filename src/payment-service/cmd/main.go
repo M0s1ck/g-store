@@ -7,6 +7,7 @@ import (
 
 	"payment-service/internal/app"
 	"payment-service/internal/config"
+	_ "payment-service/internal/docs"
 	"payment-service/internal/infrastructure/background_workers"
 )
 

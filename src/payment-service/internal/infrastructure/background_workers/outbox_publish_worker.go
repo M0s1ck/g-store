@@ -3,8 +3,9 @@ package background_workers
 import (
 	"context"
 	"log"
-	"payment-service/internal/usecase/outbox"
 	"time"
+
+	"payment-service/internal/usecase/outbox"
 )
 
 const batchSize = 100

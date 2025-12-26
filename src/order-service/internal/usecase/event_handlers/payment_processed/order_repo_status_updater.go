@@ -2,9 +2,10 @@ package payment_processed
 
 import (
 	"context"
-	"orders-service/internal/domain/entities"
 
 	"github.com/google/uuid"
+
+	"orders-service/internal/domain/entities"
 )
 
 type OrderRepoStatusUpdater interface {

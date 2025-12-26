@@ -2,10 +2,11 @@ package repository
 
 import (
 	"context"
-	"payment-service/internal/domain/entities"
-	"payment-service/internal/infrastructure/db/postgres"
 
 	"github.com/jmoiron/sqlx"
+
+	"payment-service/internal/domain/entities"
+	"payment-service/internal/infrastructure/db/postgres"
 )
 
 type BalanceTransactionRepository struct {

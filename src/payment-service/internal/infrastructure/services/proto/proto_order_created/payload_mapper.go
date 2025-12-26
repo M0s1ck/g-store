@@ -2,10 +2,11 @@ package proto_order_created
 
 import (
 	"log"
-	"payment-service/internal/usecase/order_created"
 
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/proto"
+
+	"payment-service/internal/usecase/order_created"
 )
 
 type PayloadMapper struct {

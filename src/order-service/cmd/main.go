@@ -4,10 +4,10 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"orders-service/internal/infrastructure/workers"
 
 	"orders-service/internal/app"
 	"orders-service/internal/config"
+	"orders-service/internal/infrastructure/workers"
 )
 
 // @title Order Service API

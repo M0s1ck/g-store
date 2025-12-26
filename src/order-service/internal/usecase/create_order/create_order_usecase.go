@@ -2,12 +2,12 @@ package create_order
 
 import (
 	"context"
-	"orders-service/internal/domain/errors"
 	"time"
 
 	"github.com/google/uuid"
 
 	"orders-service/internal/domain/entities"
+	"orders-service/internal/domain/errors"
 	"orders-service/internal/domain/events"
 	"orders-service/internal/usecase/common"
 )

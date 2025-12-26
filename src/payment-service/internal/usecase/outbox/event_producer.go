@@ -2,6 +2,7 @@ package outbox
 
 import (
 	"context"
+
 	"payment-service/internal/domain/messages"
 )
 

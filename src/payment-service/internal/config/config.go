@@ -33,7 +33,7 @@ func Load() (*Config, error) {
 		Broker: BrokerConfig{
 			Brokers:                   strings.Split(os.Getenv("BROKER_HOST"), ","),
 			ConsumerGroup:             os.Getenv("BROKER_CONSUMER_GROUP"),
-			OrderEventsTopic:          os.Getenv("BROKER_ORDER_EVENTS_TOPIC"),
+			OrderEventsTopic:          os.Getenv("BROKER_ORDER_COMMAND_EVENTS_TOPIC"),
 			OrderCreatedEventType:     os.Getenv("BROKER_ORDER_CREATED_EVENT_TYPE"),
 			PaymentEventsTopic:        os.Getenv("BROKER_PAYMENT_EVENTS_TOPIC"),
 			PaymentProcessedEventType: os.Getenv("BROKER_PAYMENT_PROCESSED_EVENT_TYPE"),

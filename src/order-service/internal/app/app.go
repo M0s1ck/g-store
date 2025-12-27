@@ -32,7 +32,7 @@ func Build(conf *config.Config) (http.Handler, []workers.BackgroundWorker) {
 	}
 
 	kafkaConfig := kafka2.NewKafkaConfig(&conf.Broker)
-	orderWriter := kafka2.NewKafkaWriter(kafkaConfig, kafkaConfig.OrderEventsTopic)
+	orderWriter := kafka2.NewKafkaWriter(kafkaConfig, kafkaConfig.OrderCommandEventsTopic)
 	kafkaProducer := kafka2.NewProducer(orderWriter)
 
 	orderRepo := repository.NewOrderRepository(ordersDb)

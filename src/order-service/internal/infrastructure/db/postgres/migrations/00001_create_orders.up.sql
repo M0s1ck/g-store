@@ -1,7 +1,11 @@
 CREATE TYPE order_status AS ENUM (
     'PENDING',
     'PAID',
-    'CANCELED'
+    'CANCELED',
+    'ASSEMBLING',
+    'ASSEMBLED',
+    'DELIVERING',
+    'ISSUED'
 );
 
 CREATE TABLE orders (
@@ -9,6 +13,7 @@ CREATE TABLE orders (
     user_id     UUID NOT NULL,
     amount      BIGINT NOT NULL CHECK (amount > 0),
     status      order_status NOT NULL,
+    cancellation_reason TEXT,
     description TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()

@@ -1,4 +1,4 @@
-package create_order
+package outbox
 
 import (
 	"context"
@@ -6,6 +6,6 @@ import (
 	"orders-service/internal/domain/messages"
 )
 
-type Repository interface {
+type RepositoryCreator interface {
 	Create(ctx context.Context, model *messages.OutboxMessage) error
 }

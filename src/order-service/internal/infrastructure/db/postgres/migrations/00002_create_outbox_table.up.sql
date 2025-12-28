@@ -3,6 +3,7 @@ CREATE TABLE outbox (
     aggregate     TEXT NOT NULL,
     aggregate_id  UUID NOT NULL,
     event_type    TEXT NOT NULL,
+    key           TEXT NOT NULL,
     payload       BYTEA NOT NULL,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
     sent_at       TIMESTAMPTZ,

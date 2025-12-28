@@ -31,12 +31,14 @@ func Load() (*Config, error) {
 			ConnMaxLifetime: getEnvDuration("DB_CONN_MAX_LIFETIME", 30*time.Second),
 		},
 		Broker: BrokerConfig{
-			Brokers:                   strings.Split(os.Getenv("BROKER_HOST"), ","),
-			ConsumerGroup:             os.Getenv("BROKER_CONSUMER_GROUP"),
-			OrderCommandEventsTopic:   os.Getenv("BROKER_ORDER_COMMAND_EVENTS_TOPIC"),
-			OrderCreatedEventType:     os.Getenv("BROKER_ORDER_CREATED_EVENT_TYPE"),
-			PaymentEventsTopic:        os.Getenv("BROKER_PAYMENT_EVENTS_TOPIC"),
-			PaymentProcessedEventType: os.Getenv("BROKER_PAYMENT_PROCESSED_EVENT_TYPE"),
+			Brokers:                     strings.Split(os.Getenv("BROKER_HOST"), ","),
+			ConsumerGroup:               os.Getenv("BROKER_CONSUMER_GROUP"),
+			OrderCommandEventsTopic:     os.Getenv("BROKER_ORDER_COMMAND_EVENTS_TOPIC"),
+			OrderCreatedEventType:       os.Getenv("BROKER_ORDER_CREATED_EVENT_TYPE"),
+			PaymentEventsTopic:          os.Getenv("BROKER_PAYMENT_EVENTS_TOPIC"),
+			PaymentProcessedEventType:   os.Getenv("BROKER_PAYMENT_PROCESSED_EVENT_TYPE"),
+			OrderNotificationEventTopic: os.Getenv("BROKER_ORDER_NOTIFICATION_EVENTS_TOPIC"),
+			OrderStatusChangedEventType: os.Getenv("BROKER_ORDER_STATUS_CHANGED_EVENT_TYPE"),
 		},
 	}
 

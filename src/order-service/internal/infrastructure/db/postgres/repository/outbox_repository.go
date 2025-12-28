@@ -28,13 +28,15 @@ func (r *OutboxRepository) Create(ctx context.Context, model *messages.OutboxMes
             aggregate,
             aggregate_id,
             event_type,
+            key,
             payload
-        ) VALUES ($1, $2, $3, $4, $5)
+        ) VALUES ($1, $2, $3, $4, $5, $6)
     `,
 		model.Id,
 		model.Aggregate,
 		model.AggregateID,
 		model.EventType,
+		model.Key,
 		model.Payload,
 	)
 	if err != nil {

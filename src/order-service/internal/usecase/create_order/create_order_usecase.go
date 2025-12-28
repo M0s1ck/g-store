@@ -10,27 +10,28 @@ import (
 	"orders-service/internal/domain/errors"
 	"orders-service/internal/domain/events"
 	"orders-service/internal/usecase/common"
+	"orders-service/internal/usecase/common/outbox"
 )
 
 type CreateOrderUsecase struct {
-	txManager          common.TxManager
-	orderRepo          OrderRepoCreator
-	outboxRepo         Repository
-	outboxModelFactory OutboxMessageFactory
+	txManager        common.TxManager
+	orderRepo        OrderRepoCreator
+	outboxRepo       outbox.RepositoryCreator
+	outboxMsgFactory *outbox.MessageFactory
 }
 
 func NewCreateOrderUsecase(
 	txManager common.TxManager,
 	repo OrderRepoCreator,
-	outboxRepo Repository,
-	outboxModelFactory OutboxMessageFactory,
+	outboxRepo outbox.RepositoryCreator,
+	outboxMsgFactory *outbox.MessageFactory,
 ) *CreateOrderUsecase {
 
 	return &CreateOrderUsecase{
-		orderRepo:          repo,
-		txManager:          txManager,
-		outboxRepo:         outboxRepo,
-		outboxModelFactory: outboxModelFactory,
+		orderRepo:        repo,
+		txManager:        txManager,
+		outboxRepo:       outboxRepo,
+		outboxMsgFactory: outboxMsgFactory,
 	}
 }
 
@@ -54,7 +55,7 @@ func (uc *CreateOrderUsecase) Execute(
 		}
 
 		event := uc.getEventFromOrder(order)
-		outboxModel, err := uc.outboxModelFactory.CreateOutboxModelFromOrderCreatedEvent(event)
+		outboxModel, err := uc.outboxMsgFactory.CreateFromOrderCreatedEvent(event)
 
 		err = uc.outboxRepo.Create(ctx, outboxModel)
 		if err != nil {

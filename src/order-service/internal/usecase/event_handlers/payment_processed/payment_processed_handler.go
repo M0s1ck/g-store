@@ -2,9 +2,9 @@ package payment_processed
 
 import (
 	"context"
-	"log"
 
 	"orders-service/internal/domain/entities"
+	"orders-service/internal/usecase/order_update_status"
 )
 
 const (
@@ -12,20 +12,20 @@ const (
 )
 
 type PaymentProcessedEventHandler struct {
-	orderRepo                 OrderRepoStatusUpdater
-	paymentProcessedEventType string
+	updateStatusUC            *order_update_status.UpdateStatusUsecase
 	payloadMapper             PayloadMapper
+	paymentProcessedEventType string
 }
 
 func NewPaymentProcessedEventHandler(
-	paymentProcessedEventType string,
-	orderRepo OrderRepoStatusUpdater,
+	updateStatus *order_update_status.UpdateStatusUsecase,
 	mapper PayloadMapper,
+	paymentProcessedEventType string,
 ) *PaymentProcessedEventHandler {
 
 	return &PaymentProcessedEventHandler{
 		paymentProcessedEventType: paymentProcessedEventType,
-		orderRepo:                 orderRepo,
+		updateStatusUC:            updateStatus,
 		payloadMapper:             mapper,
 	}
 }
@@ -40,18 +40,16 @@ func (p *PaymentProcessedEventHandler) Handle(ctx context.Context, payload []byt
 		return err
 	}
 
-	order, err := p.orderRepo.GetById(ctx, event.OrderId)
-	if err != nil {
-		log.Printf("Could not get order by id: %s: %s", event.OrderId, err)
-		return err
+	updReq := order_update_status.UpdateStatusRequest{
+		OrderID: event.OrderId,
 	}
 
 	if event.Status == PaymentSuccess {
-		order.Status = entities.OrderPaid
-		return p.orderRepo.UpdateStatus(ctx, order)
+		updReq.Status = entities.OrderPaid
+	} else {
+		updReq.Status = entities.OrderCanceled
+		updReq.CancellationReason = (*string)(event.PaymentFailureReason)
 	}
 
-	order.Description = (*string)(event.PaymentFailureReason)
-	order.Status = entities.OrderCanceled
-	return p.orderRepo.UpdateStatus(ctx, order)
+	return p.updateStatusUC.Execute(ctx, updReq)
 }

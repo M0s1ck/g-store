@@ -11,6 +11,7 @@ type OutboxMessage struct {
 	Aggregate   string     `db:"aggregate"` // type of aggregate, e. g. "order"
 	AggregateID uuid.UUID  `db:"aggregate_id"`
 	EventType   string     `db:"event_type"`
+	Key         string     `db:"key"`
 	Payload     []byte     `db:"payload"` // serialized event
 	CreatedAt   time.Time  `db:"created_at"`
 	SentAt      *time.Time `db:"sent_at"` // nil if not sent yet

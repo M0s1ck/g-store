@@ -18,7 +18,6 @@ type PaymentProcessedEvent struct {
 
 type PaymentStatus string
 
-// Status as enum so that it can be extended
 const (
 	PaymentSuccess PaymentStatus = "SUCCESS"
 	PaymentFailed  PaymentStatus = "FAILED"

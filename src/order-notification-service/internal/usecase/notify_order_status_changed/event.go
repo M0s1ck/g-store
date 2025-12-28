@@ -6,7 +6,8 @@ import (
 	"order-notification-service/internal/usecase/domain/value_objects"
 )
 
-type Request struct {
+// Event clean, for usecase
+type Event struct {
 	OrderID            uuid.UUID
 	UserID             uuid.UUID
 	Status             value_objects.OrderStatus

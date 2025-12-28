@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"time"
 
 	"order-notification-service/internal/config"
 	"order-notification-service/internal/infrastructure/messaging/kafka"
@@ -13,6 +14,8 @@ import (
 	"order-notification-service/internal/usecase/event_handling"
 	"order-notification-service/internal/usecase/event_handling/order_status_changed"
 	"order-notification-service/internal/usecase/notify_order_status_changed"
+
+	"github.com/google/uuid"
 )
 
 type App struct {
@@ -30,8 +33,9 @@ func Build(conf *config.Config) *App {
 	stChMapper := protostatuschanged.NewPayloadMapper()
 
 	hub := websocket.NewHub()
+	hubJsonWrapper := websocket.NewNotifyHubJSONWrapper(hub)
 
-	statusChangedNotifyUC := notify_order_status_changed.NewUsecase(hub)
+	statusChangedNotifyUC := notify_order_status_changed.NewUsecase(hubJsonWrapper)
 
 	statusChangedEventHandler := order_status_changed.NewEventHandler(
 		statusChangedNotifyUC, stChMapper, kafkaConfig.OrderStatusChangedEventType)
@@ -67,7 +71,17 @@ func (a *App) Run() {
 		}
 	}(a.consumeWorker)
 
-	http.HandleFunc("/ws", websocket.NewHandler(a.hub))
+	// to test
+	// TODO: delete
+	go func() {
+		time.Sleep(30 * time.Second)
+
+		testOrderID := uuid.MustParse("550e8400-e29b-41d4-a716-446655440000")
+
+		a.hub.NotifyOrder(testOrderID, []byte(`{"hello":"world"}`))
+	}()
+
+	http.HandleFunc("/ws", a.handlerFn)
 	err := http.ListenAndServe(a.conf.Net.Addr, nil)
 	if err != nil {
 		log.Printf("err while serving http: %v", err)

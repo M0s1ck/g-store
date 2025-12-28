@@ -6,6 +6,7 @@ import (
 	"order-notification-service/internal/usecase/notify_order_status_changed"
 )
 
+// EventHandler maps payload to event and calls usecase
 type EventHandler struct {
 	notifyUC            *notify_order_status_changed.NotifyUsecase
 	payloadMapper       PayloadMapper
@@ -35,7 +36,7 @@ func (h *EventHandler) Handle(ctx context.Context, payload []byte) error {
 		return err
 	}
 
-	ucReq := notify_order_status_changed.Request{
+	ucReq := notify_order_status_changed.Event{
 		OrderID:            event.OrderId,
 		UserID:             event.UserId,
 		Status:             event.Status,

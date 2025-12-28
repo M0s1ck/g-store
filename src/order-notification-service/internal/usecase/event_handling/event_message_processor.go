@@ -6,6 +6,7 @@ import (
 	"log"
 )
 
+// EventMsgProcessor calls specific event handler depending on msg event type
 type EventMsgProcessor struct {
 	handlers map[string]EventHandler
 }

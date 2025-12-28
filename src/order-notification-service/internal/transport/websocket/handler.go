@@ -19,8 +19,6 @@ func NewHandler(hub *Hub) http.HandlerFunc {
 			Send: make(chan []byte, 256),
 		}
 
-		hub.Register <- client
-
 		go client.writePump()
 		go client.readPump(hub)
 	}

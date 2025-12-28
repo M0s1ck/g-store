@@ -15,6 +15,10 @@ func NewUsecase(notifier TransportNotifier) *NotifyUsecase {
 	}
 }
 
-func (u *NotifyUsecase) Execute(ctx context.Context, req Request) {
-	log.Printf("Got request: %v %v %v", req.Status, req.OrderID, req.UserID)
+func (u *NotifyUsecase) Execute(ctx context.Context, evt Event) {
+	log.Printf("Got event: %v %v %v", evt.Status, evt.OrderID, evt.UserID)
+
+	// TODO: maybe add check if ok transition here (including registers of statuses)
+
+	u.notifier.NotifyOrderStatusChanged(ctx, evt)
 }

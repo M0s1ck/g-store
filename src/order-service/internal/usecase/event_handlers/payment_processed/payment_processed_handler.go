@@ -7,10 +7,6 @@ import (
 	"orders-service/internal/usecase/order_update_status"
 )
 
-const (
-	successDesc = "the order is paid"
-)
-
 type PaymentProcessedEventHandler struct {
 	updateStatusUC            *order_update_status.UpdateStatusUsecase
 	payloadMapper             PayloadMapper

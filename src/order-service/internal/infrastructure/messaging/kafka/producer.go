@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/segmentio/kafka-go"
 
@@ -9,18 +10,30 @@ import (
 )
 
 type Producer struct {
-	writer *kafka.Writer
+	ordCommandWriter      *kafka.Writer
+	ordNotificationWriter *kafka.Writer
+	ordCreatedEvtType     string
+	ordStChangedEvtType   string
 }
 
-func NewProducer(writer *kafka.Writer) *Producer {
+func NewProducer(
+	orderWriter *kafka.Writer,
+	orderNotificationWriter *kafka.Writer,
+	ordCreatedEvtType string,
+	ordStChangedType string,
+) *Producer {
+
 	return &Producer{
-		writer: writer,
+		ordCommandWriter:      orderWriter,
+		ordNotificationWriter: orderNotificationWriter,
+		ordCreatedEvtType:     ordCreatedEvtType,
+		ordStChangedEvtType:   ordStChangedType,
 	}
 }
 
 func (k *Producer) Publish(ctx context.Context, msg *messages.OutboxMessage) error {
-	return k.writer.WriteMessages(ctx, kafka.Message{
-		Key:   msg.Id[:],
+	kafkaMsg := kafka.Message{
+		Key:   []byte(msg.Key),
 		Value: msg.Payload,
 		Headers: []kafka.Header{
 			{
@@ -32,5 +45,15 @@ func (k *Producer) Publish(ctx context.Context, msg *messages.OutboxMessage) err
 				Value: []byte(msg.EventType),
 			},
 		},
-	})
+	}
+
+	switch msg.EventType {
+	case k.ordCreatedEvtType:
+		return k.ordCommandWriter.WriteMessages(ctx, kafkaMsg)
+
+	case k.ordStChangedEvtType:
+		return k.ordNotificationWriter.WriteMessages(ctx, kafkaMsg)
+	}
+
+	return fmt.Errorf("unknown event type: %s", msg.EventType)
 }

@@ -36,7 +36,8 @@ func Build(conf *config.Config) (http.Handler, []workers.BackgroundWorker) {
 
 	kafkaConfig := kafka2.NewKafkaConfig(&conf.Broker)
 	orderWriter := kafka2.NewKafkaWriter(kafkaConfig, kafkaConfig.OrderCommandEventsTopic)
-	orderProducer := kafka2.NewProducer(orderWriter)
+	orderNotifWriter := kafka2.NewKafkaWriter(kafkaConfig, kafkaConfig.OrderNotificationEventTopic)
+	orderProducer := kafka2.NewProducer(orderWriter, orderNotifWriter, kafkaConfig.OrderCreatedEventType, kafkaConfig.OrderStatusChangedEventType)
 	paymentReader := kafka2.NewKafkaReader(kafkaConfig, kafkaConfig.PaymentEventsTopic)
 
 	orderRepo := repository.NewOrderRepository(ordersDb)

@@ -1,18 +1,17 @@
 package events
 
 import (
+	"orders-service/internal/domain/value_objects"
 	"time"
 
 	"github.com/google/uuid"
-
-	"orders-service/internal/domain/entities"
 )
 
 type OrderStatusChangedEvent struct {
 	MessageId          uuid.UUID
 	OrderId            uuid.UUID
 	UserId             uuid.UUID
-	Status             entities.OrderStatus
+	Status             value_objects.OrderStatus
 	CancellationReason *string
 	CreatedAt          time.Time
 }

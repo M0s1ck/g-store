@@ -3,6 +3,7 @@ package app
 import (
 	"log"
 	"net/http"
+	"orders-service/internal/usecase/cancel_order"
 	"time"
 
 	"orders-service/internal/config"
@@ -56,18 +57,27 @@ func Build(conf *config.Config) (http.Handler, []workers.BackgroundWorker) {
 		kafkaConfig.OrderCreatedEventType, kafkaConfig.OrderStatusChangedEventType)
 
 	createOrderUc := create_order.NewCreateOrderUsecase(txManager, orderRepo, outboxRepo, outboxMsgFactory)
-	orderUpdateStatusUC := order_update_status.NewUpdateOrderStatusUsecase(txManager, orderRepo, outboxRepo, outboxMsgFactory)
+
+	updStatusPolicy := order_update_status.NewUpdateStatusPolicy()
+	updateStatusUC := order_update_status.NewUpdateOrderStatusUsecase(txManager, orderRepo, outboxRepo, updStatusPolicy, outboxMsgFactory)
+
+	cancelPolicy := cancel_order.NewCancelPolicy()
+	cancelUC := cancel_order.NewCancelOrderUsecase(orderRepo, cancelPolicy)
 
 	publishUC := outbox_publish.NewOutboxPublishUsecase(outboxRepo, orderProducer)
 
-	orderHandler := handlers.NewOrderHandler(getByIdUC, getByUserUC, createOrderUc)
+	orderHandler := handlers.NewOrderHandler(getByIdUC, getByUserUC, createOrderUc, cancelUC)
+	staffOrderHandler := handlers.NewStaffOrderHandler(cancelUC, updateStatusUC)
 
 	router := mydelivery.NewRouter(&mydelivery.RouterDeps{
-		OrderHandler: orderHandler,
+		OrderHandler:      orderHandler,
+		StaffOrderHandler: staffOrderHandler,
+		Secrets:           conf.Secrets,
 	})
 
 	payProcessedEventHandler := payment_processed.NewPaymentProcessedEventHandler(
-		orderUpdateStatusUC,
+		cancelUC,
+		updateStatusUC,
 		payProcessedMapper,
 		kafkaConfig.PaymentProcessedEventType)
 

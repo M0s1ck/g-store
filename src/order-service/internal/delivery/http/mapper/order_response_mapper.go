@@ -7,12 +7,19 @@ import (
 )
 
 func OrderToResponse(order *entities.Order) *dto.OrderResponse {
+	var reasonStr *string
+
+	if order.CancellationReason != nil {
+		tmp := string(*order.CancellationReason)
+		reasonStr = &tmp
+	}
+
 	return &dto.OrderResponse{
 		Id:                 order.Id,
 		UserId:             order.UserId,
 		Amount:             order.Amount,
 		Status:             order.Status,
-		CancellationReason: order.CancellationReason,
+		CancellationReason: reasonStr,
 		Description:        order.Description,
 		CreatedAt:          order.CreatedAt,
 		UpdatedAt:          order.UpdatedAt,
@@ -26,12 +33,6 @@ func OrdersToResponse(orders []entities.Order) []dto.OrderResponse {
 	}
 
 	return res
-}
-
-func OrderCreateRequestToApplication(req dto.CreateOrderRequest) *create_order.CreateOrderRequest {
-	return &create_order.CreateOrderRequest{
-		Amount: req.Amount,
-	}
 }
 
 func OrderCreatedResponseToDto(resp *create_order.CreateOrderResponse) *dto.OrderCreatedResponse {

@@ -2,6 +2,7 @@ package create_order
 
 import (
 	"context"
+	"orders-service/internal/domain/value_objects"
 	"time"
 
 	"github.com/google/uuid"
@@ -77,7 +78,7 @@ func (uc *CreateOrderUsecase) getOrderFromRequest(req *CreateOrderRequest, userI
 		Id:     uuid.New(),
 		UserId: userId,
 		Amount: req.Amount,
-		Status: entities.OrderPending,
+		Status: value_objects.OrderPending,
 	}
 }
 

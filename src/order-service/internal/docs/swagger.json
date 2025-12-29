@@ -22,7 +22,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "orders"
+                    "orders_customers"
                 ],
                 "summary": "Get all orders for user",
                 "parameters": [
@@ -84,7 +84,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "orders"
+                    "orders_customers"
                 ],
                 "summary": "Create an order",
                 "parameters": [
@@ -144,7 +144,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "orders"
+                    "orders_customers"
                 ],
                 "summary": "Get order by id",
                 "parameters": [
@@ -202,9 +202,249 @@
                     }
                 }
             }
+        },
+        "/orders/{id}/cancel": {
+            "post": {
+                "description": "Customer cancels order, body is optional. Possible reasons: CHANGED_MIND",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders_customers"
+                ],
+                "summary": "Cancels order (by customer)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"123e4567-e89b-12d3-a456-426614174000\"",
+                        "description": "User ID (UUID)",
+                        "name": "X-User-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "cancel request",
+                        "name": "cancel_request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ConsumerCancelOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/staff/orders/{id}/cancel": {
+            "post": {
+                "description": "Cancels order, used by store/staff, simulation of jwt role with api key that can be found in .env\nPossible reasons: OUT_OF_STOCK, DELIVERY_UNAVAILABLE",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders_staff"
+                ],
+                "summary": "Cancels order (by store)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Staff API key",
+                        "name": "X-Staff-API-Key",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Order ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "cancel request",
+                        "name": "cancel_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.StaffCancelOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/staff/orders/{id}/status": {
+            "patch": {
+                "description": "Updates order status, used by staff, simulation of jwt role with api key that can be found in .env\nPossible update pipeline: PAID -\u003e ASSEMBLING -\u003e ASSEMBLED -\u003e DELIVERING -\u003e ISSUED",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders_staff"
+                ],
+                "summary": "Update order status (by store/stuff)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Staff API key",
+                        "name": "X-Staff-API-Key",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Order ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Order status update request",
+                        "name": "status_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateOrderStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "dto.ConsumerCancelOrderRequest": {
+            "type": "object",
+            "properties": {
+                "cancellation_reason": {
+                    "type": "string",
+                    "example": "CHANGED_MIND"
+                }
+            }
+        },
         "dto.CreateOrderRequest": {
             "type": "object",
             "properties": {
@@ -238,6 +478,10 @@
                     "type": "integer",
                     "example": 19999
                 },
+                "cancellationReason": {
+                    "type": "string",
+                    "example": "INSUFFICIENT_FUNDS"
+                },
                 "createdAt": {
                     "type": "string",
                     "example": "2025-12-23T09:19:23.458426Z"
@@ -253,7 +497,7 @@
                 "status": {
                     "allOf": [
                         {
-                            "$ref": "#/definitions/entities.OrderStatus"
+                            "$ref": "#/definitions/value_objects.OrderStatus"
                         }
                     ],
                     "example": "PENDING"
@@ -288,17 +532,43 @@
                 }
             }
         },
-        "entities.OrderStatus": {
+        "dto.StaffCancelOrderRequest": {
+            "type": "object",
+            "properties": {
+                "cancellation_reason": {
+                    "type": "string",
+                    "example": "OUT_OF_STOCK"
+                }
+            }
+        },
+        "dto.UpdateOrderStatusRequest": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "example": "ASSEMBLING"
+                }
+            }
+        },
+        "value_objects.OrderStatus": {
             "type": "string",
             "enum": [
                 "PENDING",
                 "PAID",
-                "CANCELED"
+                "CANCELLED",
+                "ASSEMBLING",
+                "ASSEMBLED",
+                "DELIVERING",
+                "ISSUED"
             ],
             "x-enum-varnames": [
                 "OrderPending",
                 "OrderPaid",
-                "OrderCanceled"
+                "OrderCanceled",
+                "OrderAssembling",
+                "OrderAssembled",
+                "OrderDelivering",
+                "OrderIssued"
             ]
         }
     }

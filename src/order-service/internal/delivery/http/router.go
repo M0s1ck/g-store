@@ -2,6 +2,8 @@ package http
 
 import (
 	"net/http"
+	"orders-service/internal/config"
+	"orders-service/internal/delivery/http/dto"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -13,7 +15,9 @@ import (
 )
 
 type RouterDeps struct {
-	OrderHandler *handlers.OrderHandler
+	OrderHandler      *handlers.OrderHandler
+	StaffOrderHandler *handlers.StaffOrderHandler
+	Secrets           config.SecretConfig
 }
 
 func NewRouter(deps *RouterDeps) http.Handler {
@@ -25,17 +29,40 @@ func NewRouter(deps *RouterDeps) http.Handler {
 		middleware.Logger,
 	)
 
+	// for consumers
 	router.Route("/v1/orders", func(r chi.Router) {
 		r.Use(mymiddleware.UserIdAuthMiddleware)
 
 		r.With(mymiddleware.PaginationMiddleware(1, 20)).
 			Get("/", deps.OrderHandler.GetByUser)
 
-		r.Post("/", deps.OrderHandler.Create)
+		r.With(mymiddleware.BindJSONBodyMiddleware[dto.CreateOrderRequest]()).
+			Post("/", deps.OrderHandler.Create)
 
 		r.Route("/{id}", func(r chi.Router) {
 			r.Use(mymiddleware.UUIDMiddleware("id"))
 			r.Get("/", deps.OrderHandler.GetById)
+		})
+
+		r.Route("/{id}/cancel", func(r chi.Router) {
+			r.Use(mymiddleware.UUIDMiddleware("id"))
+			r.Use(mymiddleware.BindOptionalJSONBodyMiddleware[dto.ConsumerCancelOrderRequest]())
+			r.Post("/", deps.OrderHandler.Cancel)
+		})
+	})
+
+	// for staff / store
+	router.Route("/v1/staff/orders", func(r chi.Router) {
+		r.Use(mymiddleware.ValidateApiKey("X-Staff-API-Key", deps.Secrets.StaffApiKey))
+
+		r.Route("/{id}", func(r chi.Router) {
+			r.Use(mymiddleware.UUIDMiddleware("id"))
+
+			r.With(mymiddleware.BindJSONBodyMiddleware[dto.UpdateOrderStatusRequest]()).
+				Patch("/status", deps.StaffOrderHandler.UpdateStatus)
+
+			r.With(mymiddleware.BindJSONBodyMiddleware[dto.StaffCancelOrderRequest]()).
+				Post("/cancel", deps.StaffOrderHandler.Cancel)
 		})
 	})
 

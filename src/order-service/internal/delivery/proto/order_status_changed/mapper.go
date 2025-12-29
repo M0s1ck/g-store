@@ -1,15 +1,12 @@
 package proto
 
 import (
-	"fmt"
 	"log"
-	"time"
+	"orders-service/internal/domain/value_objects"
 
-	"github.com/google/uuid"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"orders-service/internal/domain/entities"
 	"orders-service/internal/domain/events"
 )
 
@@ -39,19 +36,19 @@ func orderStatusChangedEventToProto(
 	// --- status ---
 	var status OrderStatus
 	switch event.Status {
-	case entities.OrderPending:
+	case value_objects.OrderPending:
 		status = OrderStatus_ORDER_STATUS_PENDING
-	case entities.OrderPaid:
+	case value_objects.OrderPaid:
 		status = OrderStatus_ORDER_STATUS_PAID
-	case entities.OrderCanceled:
+	case value_objects.OrderCanceled:
 		status = OrderStatus_ORDER_STATUS_CANCELED
-	case entities.OrderAssembling:
+	case value_objects.OrderAssembling:
 		status = OrderStatus_ORDER_STATUS_ASSEMBLING
-	case entities.OrderAssembled:
+	case value_objects.OrderAssembled:
 		status = OrderStatus_ORDER_STATUS_ASSEMBLED
-	case entities.OrderDelivering:
+	case value_objects.OrderDelivering:
 		status = OrderStatus_ORDER_STATUS_DELIVERING
-	case entities.OrderIssued:
+	case value_objects.OrderIssued:
 		status = OrderStatus_ORDER_STATUS_ISSUED
 	default:
 		status = OrderStatus_ORDER_STATUS_UNSPECIFIED
@@ -77,69 +74,4 @@ func orderStatusChangedEventToProto(
 		CancellationReason: cancellationReason,
 		CreatedAt:          createdAt,
 	}
-}
-
-// TODO: move from here
-
-func OrderStatusChangedEventFromProto(
-	prEvt *OrderStatusChangedEvent,
-) (*events.OrderStatusChangedEvent, error) {
-
-	// --- UUIDs ---
-	messageId, err := uuid.Parse(prEvt.MessageId)
-	if err != nil {
-		return nil, fmt.Errorf("invalid message_id: %w", err)
-	}
-
-	orderId, err := uuid.Parse(prEvt.OrderId)
-	if err != nil {
-		return nil, fmt.Errorf("invalid order_id: %w", err)
-	}
-
-	userId, err := uuid.Parse(prEvt.UserId)
-	if err != nil {
-		return nil, fmt.Errorf("invalid user_id: %w", err)
-	}
-
-	// --- status ---
-	var status entities.OrderStatus
-	switch prEvt.Status {
-	case OrderStatus_ORDER_STATUS_PENDING:
-		status = entities.OrderPending
-	case OrderStatus_ORDER_STATUS_PAID:
-		status = entities.OrderPaid
-	case OrderStatus_ORDER_STATUS_CANCELED:
-		status = entities.OrderCanceled
-	case OrderStatus_ORDER_STATUS_ASSEMBLING:
-		status = entities.OrderAssembling
-	case OrderStatus_ORDER_STATUS_ASSEMBLED:
-		status = entities.OrderAssembled
-	case OrderStatus_ORDER_STATUS_DELIVERING:
-		status = entities.OrderDelivering
-	case OrderStatus_ORDER_STATUS_ISSUED:
-		status = entities.OrderIssued
-	default:
-		return nil, fmt.Errorf("unknown order status: %v", prEvt.Status)
-	}
-
-	// --- cancellation reason ---
-	var cancellationReason *string
-	if prEvt.CancellationReason != nil && *prEvt.CancellationReason != "" {
-		cancellationReason = prEvt.CancellationReason
-	}
-
-	// --- created at ---
-	var createdAt time.Time
-	if prEvt.CreatedAt != nil {
-		createdAt = prEvt.CreatedAt.AsTime()
-	}
-
-	return &events.OrderStatusChangedEvent{
-		MessageId:          messageId,
-		OrderId:            orderId,
-		UserId:             userId,
-		Status:             status,
-		CancellationReason: cancellationReason,
-		CreatedAt:          createdAt,
-	}, nil
 }

@@ -2,6 +2,7 @@ package order_update_status
 
 import (
 	"context"
+	myerrors "orders-service/internal/domain/errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,6 +17,7 @@ type UpdateStatusUsecase struct {
 	txManager        common.TxManager
 	orderRepo        OrderRepoStatusUpdater
 	outboxRepo       outbox.RepositoryCreator
+	policy           *UpdateStatusPolicy
 	outboxMsgFactory *outbox.MessageFactory
 }
 
@@ -23,6 +25,7 @@ func NewUpdateOrderStatusUsecase(
 	txManager common.TxManager,
 	orderRepo OrderRepoStatusUpdater,
 	outboxRepo outbox.RepositoryCreator,
+	policy *UpdateStatusPolicy,
 	outboxMsgFactory *outbox.MessageFactory,
 ) *UpdateStatusUsecase {
 
@@ -31,18 +34,27 @@ func NewUpdateOrderStatusUsecase(
 		outboxRepo:       outboxRepo,
 		txManager:        txManager,
 		outboxMsgFactory: outboxMsgFactory,
+		policy:           policy,
 	}
 }
 
-func (uc *UpdateStatusUsecase) Execute(ctx context.Context, request UpdateStatusRequest) error {
+func (uc *UpdateStatusUsecase) Execute(ctx context.Context, cmd *UpdateStatusCommand) error {
 	return uc.txManager.WithinTx(ctx, func(ctx context.Context) error {
-		order, err := uc.orderRepo.GetById(ctx, request.OrderID)
+		order, err := uc.orderRepo.GetById(ctx, cmd.OrderID)
 		if err != nil {
 			return err
 		}
 
-		order.Status = request.Status
-		order.CancellationReason = request.CancellationReason
+		if !order.Status.CanTransitionTo(cmd.Status) {
+			return myerrors.ErrInvalidOrderStatusChange
+		}
+
+		err = uc.policy.CanUpdateStatus(order, cmd.Actor, cmd.Status)
+		if err != nil {
+			return err
+		}
+
+		order.Status = cmd.Status
 
 		err = uc.orderRepo.UpdateStatus(ctx, order)
 		if err != nil {

@@ -11,6 +11,7 @@ type Config struct {
 	HTTP     HTTPConfig
 	OrdersDB DBConfig
 	Broker   BrokerConfig
+	Secrets  SecretConfig
 }
 
 func Load() (*Config, error) {
@@ -39,6 +40,9 @@ func Load() (*Config, error) {
 			PaymentProcessedEventType:   os.Getenv("BROKER_PAYMENT_PROCESSED_EVENT_TYPE"),
 			OrderNotificationEventTopic: os.Getenv("BROKER_ORDER_NOTIFICATION_EVENTS_TOPIC"),
 			OrderStatusChangedEventType: os.Getenv("BROKER_ORDER_STATUS_CHANGED_EVENT_TYPE"),
+		},
+		Secrets: SecretConfig{
+			StaffApiKey: os.Getenv("STAFF_API_KEY"),
 		},
 	}
 

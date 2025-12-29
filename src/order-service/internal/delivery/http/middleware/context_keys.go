@@ -7,4 +7,5 @@ const (
 	ctxKeyUserId
 	ctxKeyPage
 	ctxKeyLimit
+	ctxKeyBody
 )

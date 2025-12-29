@@ -1,5 +1,11 @@
 basePath: /v1
 definitions:
+  dto.ConsumerCancelOrderRequest:
+    properties:
+      cancellation_reason:
+        example: CHANGED_MIND
+        type: string
+    type: object
   dto.CreateOrderRequest:
     properties:
       amount:
@@ -22,6 +28,9 @@ definitions:
       amount:
         example: 19999
         type: integer
+      cancellationReason:
+        example: INSUFFICIENT_FUNDS
+        type: string
       createdAt:
         example: "2025-12-23T09:19:23.458426Z"
         type: string
@@ -33,7 +42,7 @@ definitions:
         type: string
       status:
         allOf:
-        - $ref: '#/definitions/entities.OrderStatus'
+        - $ref: '#/definitions/value_objects.OrderStatus'
         example: PENDING
       updatedAt:
         example: "2025-12-23T09:19:23.458426Z"
@@ -55,16 +64,36 @@ definitions:
       total:
         type: integer
     type: object
-  entities.OrderStatus:
+  dto.StaffCancelOrderRequest:
+    properties:
+      cancellation_reason:
+        example: OUT_OF_STOCK
+        type: string
+    type: object
+  dto.UpdateOrderStatusRequest:
+    properties:
+      status:
+        example: ASSEMBLING
+        type: string
+    type: object
+  value_objects.OrderStatus:
     enum:
     - PENDING
     - PAID
-    - CANCELED
+    - CANCELLED
+    - ASSEMBLING
+    - ASSEMBLED
+    - DELIVERING
+    - ISSUED
     type: string
     x-enum-varnames:
     - OrderPending
     - OrderPaid
     - OrderCanceled
+    - OrderAssembling
+    - OrderAssembled
+    - OrderDelivering
+    - OrderIssued
 info:
   contact: {}
   description: Order microservice
@@ -113,7 +142,7 @@ paths:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: Get all orders for user
       tags:
-      - orders
+      - orders_customers
     post:
       consumes:
       - application/json
@@ -152,7 +181,7 @@ paths:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: Create an order
       tags:
-      - orders
+      - orders_customers
   /orders/{id}:
     get:
       consumes:
@@ -198,7 +227,165 @@ paths:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: Get order by id
       tags:
-      - orders
+      - orders_customers
+  /orders/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: 'Customer cancels order, body is optional. Possible reasons: CHANGED_MIND'
+      parameters:
+      - description: Order ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User ID (UUID)
+        example: '"123e4567-e89b-12d3-a456-426614174000"'
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      - description: cancel request
+        in: body
+        name: cancel_request
+        schema:
+          $ref: '#/definitions/dto.ConsumerCancelOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Cancels order (by customer)
+      tags:
+      - orders_customers
+  /staff/orders/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Cancels order, used by store/staff, simulation of jwt role with api key that can be found in .env
+        Possible reasons: OUT_OF_STOCK, DELIVERY_UNAVAILABLE
+      parameters:
+      - description: Staff API key
+        in: header
+        name: X-Staff-API-Key
+        required: true
+        type: string
+      - description: Order ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: cancel request
+        in: body
+        name: cancel_request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.StaffCancelOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Cancels order (by store)
+      tags:
+      - orders_staff
+  /staff/orders/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: |-
+        Updates order status, used by staff, simulation of jwt role with api key that can be found in .env
+        Possible update pipeline: PAID -> ASSEMBLING -> ASSEMBLED -> DELIVERING -> ISSUED
+      parameters:
+      - description: Staff API key
+        in: header
+        name: X-Staff-API-Key
+        required: true
+        type: string
+      - description: Order ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Order status update request
+        in: body
+        name: status_request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateOrderStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update order status (by store/stuff)
+      tags:
+      - orders_staff
 schemes:
 - http
 - https

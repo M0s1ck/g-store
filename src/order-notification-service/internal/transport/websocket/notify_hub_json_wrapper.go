@@ -20,7 +20,7 @@ func NewNotifyHubJSONWrapper(hub *Hub) *NotifyHubJSONWrapper {
 }
 
 func (n *NotifyHubJSONWrapper) NotifyOrderStatusChanged(
-	ctx context.Context,
+	_ context.Context,
 	event notify_order_status_changed.Event,
 ) {
 	data, err := json.Marshal(struct {

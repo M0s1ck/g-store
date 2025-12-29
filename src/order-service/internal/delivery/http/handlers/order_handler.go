@@ -1,15 +1,12 @@
 package handlers
 
 import (
-	"encoding/json"
-	"errors"
 	"net/http"
-
 	"orders-service/internal/delivery/http/dto"
 	"orders-service/internal/delivery/http/helpers"
 	"orders-service/internal/delivery/http/mapper"
 	mymiddleware "orders-service/internal/delivery/http/middleware"
-	derrors "orders-service/internal/domain/errors"
+	"orders-service/internal/usecase/cancel_order"
 	"orders-service/internal/usecase/create_order"
 	"orders-service/internal/usecase/get_orders"
 )
@@ -18,25 +15,29 @@ type OrderHandler struct {
 	getById   *get_orders.GetByIdUsecase
 	getByUser *get_orders.GetByUserUsecase
 	create    *create_order.CreateOrderUsecase
+	cancel    *cancel_order.CancelOrderUsecase
 }
 
 func NewOrderHandler(
 	get *get_orders.GetByIdUsecase,
 	getAll *get_orders.GetByUserUsecase,
 	create *create_order.CreateOrderUsecase,
+	cancel *cancel_order.CancelOrderUsecase,
+
 ) *OrderHandler {
 
 	return &OrderHandler{
 		getById:   get,
 		getByUser: getAll,
 		create:    create,
+		cancel:    cancel,
 	}
 }
 
 // GetById godoc
 // @Summary Get order by id
 // @Description Returns order by UUID
-// @Tags orders
+// @Tags orders_customers
 // @Accept json
 // @Produce json
 // @Param X-User-ID header string true "User ID (UUID)"
@@ -56,7 +57,7 @@ func (h *OrderHandler) GetById(w http.ResponseWriter, r *http.Request) {
 
 	order, err := h.getById.Execute(ctx, orderId, userId)
 	if err != nil {
-		h.handleError(w, err)
+		helpers.HandleError(w, err)
 		return
 	}
 
@@ -66,7 +67,7 @@ func (h *OrderHandler) GetById(w http.ResponseWriter, r *http.Request) {
 // GetByUser godoc
 // @Summary Get all orders for user
 // @Description Returns paginated list of orders for the authenticated user
-// @Tags orders
+// @Tags orders_customers
 // @Accept json
 // @Produce json
 // @Param X-User-ID header string true "User ID (UUID)"
@@ -86,7 +87,7 @@ func (h *OrderHandler) GetByUser(w http.ResponseWriter, r *http.Request) {
 
 	orders, total, err := h.getByUser.Execute(ctx, userId, page, limit)
 	if err != nil {
-		h.handleError(w, err)
+		helpers.HandleError(w, err)
 		return
 	}
 
@@ -103,7 +104,7 @@ func (h *OrderHandler) GetByUser(w http.ResponseWriter, r *http.Request) {
 // Create godoc
 // @Summary Create an order
 // @Description Creates a new order, a message is sent to payment service
-// @Tags orders
+// @Tags orders_customers
 // @Accept json
 // @Produce json
 // @Param X-User-ID header string true "User ID (UUID)" example("123e4567-e89b-12d3-a456-426614174000")
@@ -114,24 +115,15 @@ func (h *OrderHandler) GetByUser(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /orders [post]
 func (h *OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var dtoReq dto.CreateOrderRequest
-	if err := json.NewDecoder(r.Body).Decode(&dtoReq); err != nil {
-		helpers.RespondError(w, http.StatusBadRequest, "invalid request body")
-		return
-	}
-
-	defer func() {
-		_ = r.Body.Close()
-	}()
-
 	ctx := r.Context()
 	userId := mymiddleware.UserIdFromContext(ctx)
+	dtoReq := mymiddleware.BodyFromContext[dto.CreateOrderRequest](ctx)
 
 	req := mapper.OrderCreateRequestToApplication(dtoReq)
 
 	ordResp, err := h.create.Execute(ctx, req, userId)
 	if err != nil {
-		h.handleError(w, err)
+		helpers.HandleError(w, err)
 		return
 	}
 
@@ -139,18 +131,41 @@ func (h *OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 	helpers.RespondJSON(w, http.StatusCreated, dtoResp)
 }
 
-func (h *OrderHandler) handleError(w http.ResponseWriter, err error) {
-	switch {
-	case errors.Is(err, derrors.ErrOrderNotFound):
-		helpers.RespondError(w, http.StatusNotFound, err.Error())
+// Cancel godoc
+// @Summary Cancels order (by customer)
+// @Description Customer cancels order, body is optional. Possible reasons: CHANGED_MIND
+// @Tags orders_customers
+// @Accept json
+// @Produce json
+// @Param id path string true "Order ID (UUID)"
+// @Param X-User-ID header string true "User ID (UUID)" example("123e4567-e89b-12d3-a456-426614174000")
+// @Param cancel_request body dto.ConsumerCancelOrderRequest false "cancel request"
+// @Success 204
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 409 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /orders/{id}/cancel [post]
+func (h *OrderHandler) Cancel(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 
-	case errors.Is(err, derrors.ErrForbidden):
-		helpers.RespondError(w, http.StatusForbidden, err.Error())
+	orderID := mymiddleware.UUIDFromContext(ctx)
+	userID := mymiddleware.UserIdFromContext(ctx)
+	dtoReq := mymiddleware.OptionalBodyFromContext[dto.ConsumerCancelOrderRequest](ctx)
 
-	case errors.Is(err, derrors.ErrAmountNotPositive):
-		helpers.RespondError(w, http.StatusBadRequest, err.Error())
-
-	default:
-		helpers.RespondError(w, http.StatusInternalServerError, "internal error: "+err.Error())
+	req, err := mapper.ConsumerCancelOrderRequestToApplication(orderID, userID, dtoReq)
+	if err != nil {
+		helpers.HandleError(w, err)
+		return
 	}
+
+	err = h.cancel.Execute(ctx, req)
+	if err != nil {
+		helpers.HandleError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

@@ -2,13 +2,11 @@ package order_update_status
 
 import (
 	"context"
-	myerrors "orders-service/internal/domain/errors"
 	"time"
 
-	"github.com/google/uuid"
-
 	"orders-service/internal/domain/entities"
-	"orders-service/internal/domain/events"
+	myerrors "orders-service/internal/domain/errors"
+	"orders-service/internal/domain/events/produced"
 	"orders-service/internal/usecase/common"
 	"orders-service/internal/usecase/common/outbox"
 )
@@ -16,17 +14,17 @@ import (
 type UpdateStatusUsecase struct {
 	txManager        common.TxManager
 	orderRepo        OrderRepoStatusUpdater
-	outboxRepo       outbox.RepositoryCreator
+	outboxRepo       common_outbox.RepositoryCreator
 	policy           *UpdateStatusPolicy
-	outboxMsgFactory *outbox.MessageFactory
+	outboxMsgFactory *common_outbox.MessageFactory
 }
 
 func NewUpdateOrderStatusUsecase(
 	txManager common.TxManager,
 	orderRepo OrderRepoStatusUpdater,
-	outboxRepo outbox.RepositoryCreator,
+	outboxRepo common_outbox.RepositoryCreator,
 	policy *UpdateStatusPolicy,
-	outboxMsgFactory *outbox.MessageFactory,
+	outboxMsgFactory *common_outbox.MessageFactory,
 ) *UpdateStatusUsecase {
 
 	return &UpdateStatusUsecase{
@@ -72,13 +70,11 @@ func (uc *UpdateStatusUsecase) Execute(ctx context.Context, cmd *UpdateStatusCom
 
 }
 
-func toOrderStatusChangedEvent(order *entities.Order) *events.OrderStatusChangedEvent {
-	return &events.OrderStatusChangedEvent{
-		MessageId:          uuid.New(),
-		OrderId:            order.Id,
-		UserId:             order.UserId,
-		Status:             order.Status,
-		CancellationReason: order.Description,
-		CreatedAt:          time.Now(),
+func toOrderStatusChangedEvent(order *entities.Order) *published_events.OrderStatusChangedEvent {
+	return &published_events.OrderStatusChangedEvent{
+		OrderId:    order.Id,
+		UserId:     order.UserId,
+		Status:     order.Status,
+		OccurredAt: time.Now(),
 	}
 }

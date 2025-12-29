@@ -3,21 +3,19 @@ package app
 import (
 	"log"
 	"net/http"
-	"orders-service/internal/usecase/cancel_order"
 	"time"
 
 	"orders-service/internal/config"
-	mydelivery "orders-service/internal/delivery/http"
+	"orders-service/internal/delivery/http"
 	"orders-service/internal/delivery/http/handlers"
-	"orders-service/internal/delivery/proto/order_created"
-	protostatuschanged "orders-service/internal/delivery/proto/order_status_changed"
-	protopayment "orders-service/internal/delivery/proto/payment_processed"
 	"orders-service/internal/infrastructure/db/postgres"
 	"orders-service/internal/infrastructure/db/postgres/repository"
-	kafka2 "orders-service/internal/infrastructure/messaging/kafka"
-	servlogger "orders-service/internal/infrastructure/services/logger"
+	"orders-service/internal/infrastructure/msg_broker/kafka"
+	"orders-service/internal/infrastructure/msg_broker/proto/mappers"
+	"orders-service/internal/infrastructure/services/logger"
 	"orders-service/internal/infrastructure/workers"
-	comoutbox "orders-service/internal/usecase/common/outbox"
+	"orders-service/internal/usecase/cancel_order"
+	"orders-service/internal/usecase/common/outbox"
 	"orders-service/internal/usecase/create_order"
 	"orders-service/internal/usecase/event_handlers"
 	"orders-service/internal/usecase/event_handlers/payment_processed"
@@ -28,18 +26,17 @@ import (
 
 func Build(conf *config.Config) (http.Handler, []workers.BackgroundWorker) {
 	psgConf := postgres.NewConfig(conf)
-	logger := servlogger.NewSlogLogger()
+	logger := services_logger.NewSlogLogger()
 	ordersDb, err := postgres.New(psgConf, logger)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	kafkaConfig := kafka2.NewKafkaConfig(&conf.Broker)
-	orderWriter := kafka2.NewKafkaWriter(kafkaConfig, kafkaConfig.OrderCommandEventsTopic)
-	orderNotifWriter := kafka2.NewKafkaWriter(kafkaConfig, kafkaConfig.OrderNotificationEventTopic)
-	orderProducer := kafka2.NewProducer(orderWriter, orderNotifWriter, kafkaConfig.OrderCreatedEventType, kafkaConfig.OrderStatusChangedEventType)
-	paymentReader := kafka2.NewKafkaReader(kafkaConfig, kafkaConfig.PaymentEventsTopic)
+	kafkaConfig := msg_kafka.NewKafkaConfig(&conf.Broker)
+	orderWriter := msg_kafka.NewKafkaWriter(kafkaConfig, kafkaConfig.OrderEventsTopic)
+	orderProducer := msg_kafka.NewProducer(orderWriter, kafkaConfig.OrderCreatedEventType, kafkaConfig.OrderCancelledEventType, kafkaConfig.OrderStatusChangedEventType)
+	paymentReader := msg_kafka.NewKafkaReader(kafkaConfig, kafkaConfig.PaymentEventsTopic)
 
 	orderRepo := repository.NewOrderRepository(ordersDb)
 	outboxRepo := repository.NewOutboxRepository(ordersDb)
@@ -48,28 +45,30 @@ func Build(conf *config.Config) (http.Handler, []workers.BackgroundWorker) {
 	getByIdUC := get_orders.NewGetByIdUsecase(orderRepo)
 	getByUserUC := get_orders.NewGetByUserUsecase(orderRepo)
 
-	ordCrMapper := order_created.NewPayloadMapper()
-	payProcessedMapper := protopayment.NewPayloadMapper()
-	ordStChangedMapper := protostatuschanged.NewPayloadMapper()
+	ordCrMapper := proto_mappers.NewOrderCreatedPayloadMapper()
+	payProcessedMapper := proto_mappers.NewPaymentProcessedPayloadMapper()
+	ordCancelMapper := proto_mappers.NewOrderCancelledPayloadMapper()
+	ordStChangedMapper := proto_mappers.NewOrderStatusChangedPayloadMapper()
 
-	outboxMsgFactory := comoutbox.NewMessageFactory(
-		ordCrMapper, ordStChangedMapper,
-		kafkaConfig.OrderCreatedEventType, kafkaConfig.OrderStatusChangedEventType)
-
-	createOrderUc := create_order.NewCreateOrderUsecase(txManager, orderRepo, outboxRepo, outboxMsgFactory)
+	outboxMsgFactory := common_outbox.NewMessageFactory(
+		ordCrMapper, ordCancelMapper, ordStChangedMapper,
+		kafkaConfig.OrderCreatedEventType,
+		kafkaConfig.OrderCancelledEventType,
+		kafkaConfig.OrderStatusChangedEventType)
 
 	updStatusPolicy := order_update_status.NewUpdateStatusPolicy()
-	updateStatusUC := order_update_status.NewUpdateOrderStatusUsecase(txManager, orderRepo, outboxRepo, updStatusPolicy, outboxMsgFactory)
-
 	cancelPolicy := cancel_order.NewCancelPolicy()
-	cancelUC := cancel_order.NewCancelOrderUsecase(orderRepo, cancelPolicy)
+
+	createOrderUc := create_order.NewCreateOrderUsecase(txManager, orderRepo, outboxRepo, outboxMsgFactory)
+	cancelUC := cancel_order.NewCancelOrderUsecase(orderRepo, outboxRepo, txManager, outboxMsgFactory, cancelPolicy)
+	updateStatusUC := order_update_status.NewUpdateOrderStatusUsecase(txManager, orderRepo, outboxRepo, updStatusPolicy, outboxMsgFactory)
 
 	publishUC := outbox_publish.NewOutboxPublishUsecase(outboxRepo, orderProducer)
 
 	orderHandler := handlers.NewOrderHandler(getByIdUC, getByUserUC, createOrderUc, cancelUC)
 	staffOrderHandler := handlers.NewStaffOrderHandler(cancelUC, updateStatusUC)
 
-	router := mydelivery.NewRouter(&mydelivery.RouterDeps{
+	router := delivery_http.NewRouter(&delivery_http.RouterDeps{
 		OrderHandler:      orderHandler,
 		StaffOrderHandler: staffOrderHandler,
 		Secrets:           conf.Secrets,

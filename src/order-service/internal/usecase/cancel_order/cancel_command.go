@@ -1,9 +1,9 @@
 package cancel_order
 
 import (
-	"orders-service/internal/domain/value_objects"
-
 	"github.com/google/uuid"
+
+	"orders-service/internal/domain/value_objects"
 )
 
 type CancelOrderCommand struct {

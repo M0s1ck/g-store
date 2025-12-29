@@ -1,4 +1,4 @@
-package logger
+package services_logger
 
 import (
 	"log/slog"

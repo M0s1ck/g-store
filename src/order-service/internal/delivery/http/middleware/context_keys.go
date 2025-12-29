@@ -1,4 +1,4 @@
-package middleware
+package my_middleware
 
 type CtxKey int
 

@@ -4,7 +4,7 @@
 // 	protoc        v6.33.2
 // source: order_created_event.proto
 
-package order_created
+package gen
 
 import (
 	reflect "reflect"
@@ -25,11 +25,10 @@ const (
 
 type OrderCreatedEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	MessageId     string                 `protobuf:"bytes,1,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
-	OrderId       string                 `protobuf:"bytes,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Amount        int64                  `protobuf:"varint,4,opt,name=amount,proto3" json:"amount,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	OrderId       string                 `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Amount        int64                  `protobuf:"varint,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -64,13 +63,6 @@ func (*OrderCreatedEvent) Descriptor() ([]byte, []int) {
 	return file_order_created_event_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *OrderCreatedEvent) GetMessageId() string {
-	if x != nil {
-		return x.MessageId
-	}
-	return ""
-}
-
 func (x *OrderCreatedEvent) GetOrderId() string {
 	if x != nil {
 		return x.OrderId
@@ -103,15 +95,13 @@ var File_order_created_event_proto protoreflect.FileDescriptor
 
 const file_order_created_event_proto_rawDesc = "" +
 	"\n" +
-	"\x19order_created_event.proto\x12\x06events\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb9\x01\n" +
-	"\x11OrderCreatedEvent\x12\x1d\n" +
+	"\x19order_created_event.proto\x12\x06events\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9a\x01\n" +
+	"\x11OrderCreatedEvent\x12\x19\n" +
+	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x16\n" +
+	"\x06amount\x18\x03 \x01(\x03R\x06amount\x129\n" +
 	"\n" +
-	"message_id\x18\x01 \x01(\tR\tmessageId\x12\x19\n" +
-	"\border_id\x18\x02 \x01(\tR\aorderId\x12\x17\n" +
-	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x16\n" +
-	"\x06amount\x18\x04 \x01(\x03R\x06amount\x129\n" +
-	"\n" +
-	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAtB=Z;orders-service/internal/infrastructure/services/proto;protob\x06proto3"
+	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAtB@Z>order-service/internal/infrastructure/msg_broker/proto/gen;genb\x06proto3"
 
 var (
 	file_order_created_event_proto_rawDescOnce sync.Once

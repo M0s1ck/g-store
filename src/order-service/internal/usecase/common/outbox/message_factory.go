@@ -1,38 +1,44 @@
-package outbox
+package common_outbox
 
 import (
 	"time"
 
 	"github.com/google/uuid"
 
-	"orders-service/internal/domain/events"
+	"orders-service/internal/domain/events/produced"
 	"orders-service/internal/domain/messages"
 )
 
 type MessageFactory struct {
 	ordCrMapper         OrderCreatedEventPayloadMapper
+	ordCancelMapper     OrderCancelledPayloadMapper
 	ordStMapper         OrderStatusChangedPayloadMapper
-	ordStChangedEvtType string
 	ordCrEvtType        string
+	ordCancelEvtType    string
+	ordStChangedEvtType string
 }
 
 func NewMessageFactory(
 	ordCrMapper OrderCreatedEventPayloadMapper,
+	ordCancelMapper OrderCancelledPayloadMapper,
 	ordStMapper OrderStatusChangedPayloadMapper,
-	ordStCrEvtType string,
+	ordCrEvtType string,
+	ordCancelEvtType string,
 	ordStChangedEvtType string,
 ) *MessageFactory {
 
 	return &MessageFactory{
 		ordCrMapper:         ordCrMapper,
 		ordStMapper:         ordStMapper,
+		ordCancelMapper:     ordCancelMapper,
+		ordCancelEvtType:    ordCancelEvtType,
 		ordStChangedEvtType: ordStChangedEvtType,
-		ordCrEvtType:        ordStCrEvtType,
+		ordCrEvtType:        ordCrEvtType,
 	}
 }
 
 func (f *MessageFactory) CreateFromOrderCreatedEvent(
-	event *events.OrderCreatedEvent,
+	event *published_events.OrderCreatedEvent,
 ) (*messages.OutboxMessage, error) {
 
 	payload, err := f.ordCrMapper.OrderCreatedEventToPayload(event)
@@ -51,8 +57,28 @@ func (f *MessageFactory) CreateFromOrderCreatedEvent(
 	}, nil
 }
 
+func (f *MessageFactory) CreateMessageOrderCancelledEvent(
+	event *published_events.OrderCancelledEvent,
+) (*messages.OutboxMessage, error) {
+
+	payload, err := f.ordCancelMapper.OrderCancelledEventToPayload(event)
+	if err != nil {
+		return nil, err
+	}
+
+	return &messages.OutboxMessage{
+		Id:          uuid.New(),
+		Aggregate:   "order",
+		AggregateID: event.OrderId,
+		EventType:   f.ordCancelEvtType,
+		Key:         event.OrderId.String(),
+		Payload:     payload,
+		CreatedAt:   time.Now(),
+	}, nil
+}
+
 func (f *MessageFactory) CreateMessageOrderStatusChangedEvent(
-	event *events.OrderStatusChangedEvent,
+	event *published_events.OrderStatusChangedEvent,
 ) (*messages.OutboxMessage, error) {
 
 	payload, err := f.ordStMapper.OrderStatusChangedEventToPayload(event)
@@ -65,7 +91,7 @@ func (f *MessageFactory) CreateMessageOrderStatusChangedEvent(
 		Aggregate:   "order",
 		AggregateID: event.OrderId,
 		EventType:   f.ordStChangedEvtType,
-		Key:         event.UserId.String(),
+		Key:         event.UserId.String(), // there will be partition by user
 		Payload:     payload,
 		CreatedAt:   time.Now(),
 	}, nil

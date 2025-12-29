@@ -2,14 +2,14 @@ package create_order
 
 import (
 	"context"
-	"orders-service/internal/domain/value_objects"
 	"time"
 
 	"github.com/google/uuid"
 
 	"orders-service/internal/domain/entities"
 	"orders-service/internal/domain/errors"
-	"orders-service/internal/domain/events"
+	"orders-service/internal/domain/events/produced"
+	"orders-service/internal/domain/value_objects"
 	"orders-service/internal/usecase/common"
 	"orders-service/internal/usecase/common/outbox"
 )
@@ -17,15 +17,15 @@ import (
 type CreateOrderUsecase struct {
 	txManager        common.TxManager
 	orderRepo        OrderRepoCreator
-	outboxRepo       outbox.RepositoryCreator
-	outboxMsgFactory *outbox.MessageFactory
+	outboxRepo       common_outbox.RepositoryCreator
+	outboxMsgFactory *common_outbox.MessageFactory
 }
 
 func NewCreateOrderUsecase(
 	txManager common.TxManager,
 	repo OrderRepoCreator,
-	outboxRepo outbox.RepositoryCreator,
-	outboxMsgFactory *outbox.MessageFactory,
+	outboxRepo common_outbox.RepositoryCreator,
+	outboxMsgFactory *common_outbox.MessageFactory,
 ) *CreateOrderUsecase {
 
 	return &CreateOrderUsecase{
@@ -45,7 +45,7 @@ func (uc *CreateOrderUsecase) Execute(
 	order := uc.getOrderFromRequest(request, userId)
 
 	if order.Amount <= 0 {
-		return nil, errors.ErrAmountNotPositive
+		return nil, domain_errors.ErrAmountNotPositive
 	}
 
 	err := uc.txManager.WithinTx(ctx, func(ctx context.Context) error {
@@ -82,12 +82,11 @@ func (uc *CreateOrderUsecase) getOrderFromRequest(req *CreateOrderRequest, userI
 	}
 }
 
-func (uc *CreateOrderUsecase) getEventFromOrder(order *entities.Order) *events.OrderCreatedEvent {
-	return &events.OrderCreatedEvent{
-		MessageId: uuid.New(),
-		OrderId:   order.Id,
-		UserId:    order.UserId,
-		Amount:    order.Amount,
-		CreatedAt: time.Now(),
+func (uc *CreateOrderUsecase) getEventFromOrder(order *entities.Order) *published_events.OrderCreatedEvent {
+	return &published_events.OrderCreatedEvent{
+		OrderId:    order.Id,
+		UserId:     order.UserId,
+		Amount:     order.Amount,
+		OccurredAt: time.Now(),
 	}
 }

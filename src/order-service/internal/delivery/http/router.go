@@ -1,17 +1,17 @@
-package http
+package delivery_http
 
 import (
 	"net/http"
-	"orders-service/internal/config"
-	"orders-service/internal/delivery/http/dto"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/swaggo/http-swagger"
 
+	"orders-service/api/docs"
+	"orders-service/internal/config"
+	"orders-service/internal/delivery/http/dto"
 	"orders-service/internal/delivery/http/handlers"
 	mymiddleware "orders-service/internal/delivery/http/middleware"
-	"orders-service/internal/docs"
 )
 
 type RouterDeps struct {

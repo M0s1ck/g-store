@@ -2,9 +2,10 @@ package cancel_order
 
 import (
 	"context"
-	"orders-service/internal/domain/entities"
 
 	"github.com/google/uuid"
+
+	"orders-service/internal/domain/entities"
 )
 
 type OrderRepoCancel interface {

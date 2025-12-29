@@ -1,11 +1,17 @@
-package outbox
+package common_outbox
 
-import "orders-service/internal/domain/events"
+import (
+	"orders-service/internal/domain/events/produced"
+)
 
 type OrderCreatedEventPayloadMapper interface {
-	OrderCreatedEventToPayload(event *events.OrderCreatedEvent) ([]byte, error)
+	OrderCreatedEventToPayload(event *published_events.OrderCreatedEvent) ([]byte, error)
 }
 
 type OrderStatusChangedPayloadMapper interface {
-	OrderStatusChangedEventToPayload(event *events.OrderStatusChangedEvent) ([]byte, error)
+	OrderStatusChangedEventToPayload(event *published_events.OrderStatusChangedEvent) ([]byte, error)
+}
+
+type OrderCancelledPayloadMapper interface {
+	OrderCancelledEventToPayload(event *published_events.OrderCancelledEvent) ([]byte, error)
 }

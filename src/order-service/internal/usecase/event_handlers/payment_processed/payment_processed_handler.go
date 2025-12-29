@@ -2,6 +2,8 @@ package payment_processed
 
 import (
 	"context"
+
+	"orders-service/internal/domain/events/consumed"
 	"orders-service/internal/domain/value_objects"
 	"orders-service/internal/usecase/cancel_order"
 	"orders-service/internal/usecase/order_update_status"
@@ -39,7 +41,7 @@ func (p *PaymentProcessedEventHandler) Handle(ctx context.Context, payload []byt
 		return err
 	}
 
-	if event.Status == PaymentSuccess {
+	if event.Status == consumed_events.PaymentSuccess {
 		updCmd := order_update_status.UpdateStatusCommand{
 			OrderID: event.OrderId,
 			Status:  value_objects.OrderPaid,
@@ -64,11 +66,11 @@ func (p *PaymentProcessedEventHandler) Handle(ctx context.Context, payload []byt
 	return p.cancelUC.Execute(ctx, &cmd)
 }
 
-func paymentFailureReasonToCancellationReason(pfr PaymentFailureReason) value_objects.CancellationReason {
+func paymentFailureReasonToCancellationReason(pfr consumed_events.PaymentFailureReason) value_objects.CancellationReason {
 	switch pfr {
-	case FailureNoAccount:
+	case consumed_events.FailureNoAccount:
 		return value_objects.CancellationNoPaymentAccount
-	case FailureInsufficientFunds:
+	case consumed_events.FailureInsufficientFunds:
 		return value_objects.CancellationInsufficientFunds
 	default:
 		return value_objects.CancellationPaymentInternalError

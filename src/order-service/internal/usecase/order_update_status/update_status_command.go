@@ -1,9 +1,9 @@
 package order_update_status
 
 import (
-	"orders-service/internal/domain/value_objects"
-
 	"github.com/google/uuid"
+
+	"orders-service/internal/domain/value_objects"
 )
 
 type UpdateStatusCommand struct {

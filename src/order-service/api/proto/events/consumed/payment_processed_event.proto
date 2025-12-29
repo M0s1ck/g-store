@@ -4,20 +4,18 @@ package payments;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "order-service/internal/delivery/proto/payment_processed;proto";
+option go_package = "order-service/internal/infrastructure/msg_broker/proto/gen;gen";
 
 message PaymentProcessedEvent {
-string message_id = 1;
-string order_id   = 2;
-string user_id    = 3;
-int64  amount     = 4;
+string order_id   = 1;
+string user_id    = 2;
+int64  amount     = 3;
 
-PaymentStatus status = 5;
+PaymentStatus status = 4;
 
-// nullable field (proto3 optional)
-optional PaymentFailureReason payment_failure_reason = 6;
+optional PaymentFailureReason payment_failure_reason = 5;
 
-google.protobuf.Timestamp occurred_at = 7;
+google.protobuf.Timestamp occurred_at = 6;
 }
 
 enum PaymentStatus {

@@ -1,10 +1,11 @@
 package entities
 
 import (
-	"orders-service/internal/domain/value_objects"
 	"time"
 
 	"github.com/google/uuid"
+
+	"orders-service/internal/domain/value_objects"
 )
 
 type Order struct {

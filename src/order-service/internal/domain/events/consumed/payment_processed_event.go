@@ -1,4 +1,4 @@
-package payment_processed
+package consumed_events
 
 import (
 	"time"

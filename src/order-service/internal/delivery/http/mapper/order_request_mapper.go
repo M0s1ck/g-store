@@ -1,14 +1,14 @@
 package mapper
 
 import (
+	"github.com/google/uuid"
+
 	"orders-service/internal/delivery/http/dto"
 	myerrors "orders-service/internal/domain/errors"
 	"orders-service/internal/domain/value_objects"
 	"orders-service/internal/usecase/cancel_order"
 	"orders-service/internal/usecase/create_order"
 	"orders-service/internal/usecase/order_update_status"
-
-	"github.com/google/uuid"
 )
 
 func OrderCreateRequestToApplication(req dto.CreateOrderRequest) *create_order.CreateOrderRequest {

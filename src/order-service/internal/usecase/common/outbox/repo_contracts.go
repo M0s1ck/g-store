@@ -1,4 +1,4 @@
-package outbox
+package common_outbox
 
 import (
 	"context"

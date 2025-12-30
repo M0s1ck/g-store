@@ -2,7 +2,7 @@ basePath: /v1
 definitions:
   dto.ConsumerCancelOrderRequest:
     properties:
-      cancellation_reason:
+      cancellationReason:
         example: CHANGED_MIND
         type: string
     type: object
@@ -19,7 +19,7 @@ definitions:
     type: object
   dto.OrderCreatedResponse:
     properties:
-      OrderID:
+      orderId:
         example: 550e8400-e29b-41d4-a716-446655440000
         type: string
     type: object
@@ -66,7 +66,7 @@ definitions:
     type: object
   dto.StaffCancelOrderRequest:
     properties:
-      cancellation_reason:
+      cancellationReason:
         example: OUT_OF_STOCK
         type: string
     type: object

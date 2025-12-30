@@ -71,7 +71,7 @@ func (f *MessageFactory) CreateMessageOrderCancelledEvent(
 		Aggregate:   "order",
 		AggregateID: event.OrderId,
 		EventType:   f.ordCancelEvtType,
-		Key:         event.OrderId.String(),
+		Key:         event.UserId.String(),
 		Payload:     payload,
 		CreatedAt:   time.Now(),
 	}, nil

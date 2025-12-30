@@ -29,11 +29,16 @@ func NewEventHandler(
 }
 
 func (eh *CancelEventHandler) Handle(ctx context.Context, msg messages.InboxMessage) error {
-	log.Printf("Got msg: %v", msg.Topic)
-
 	event, err := eh.orderMapper.ToOrderCancelledEvent(msg.Payload)
 	if err != nil {
 		return err
+	}
+
+	if event.CancelReason == consumed_events.CancellationNoPaymentAccount ||
+		event.CancelReason == consumed_events.CancellationInsufficientFunds {
+
+		log.Printf("cancel reason: %v -> no changes", event.CancelReason)
+		return nil
 	}
 
 	// Here we can add logic to determine which usecase to use

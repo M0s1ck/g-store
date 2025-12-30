@@ -27,5 +27,5 @@ type OrdersResponse struct {
 }
 
 type OrderCreatedResponse struct {
-	Id uuid.UUID `json:"OrderID" example:"550e8400-e29b-41d4-a716-446655440000"`
+	Id uuid.UUID `json:"orderId" example:"550e8400-e29b-41d4-a716-446655440000"`
 }

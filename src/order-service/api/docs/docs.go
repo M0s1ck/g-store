@@ -442,7 +442,7 @@ const docTemplate = `{
         "dto.ConsumerCancelOrderRequest": {
             "type": "object",
             "properties": {
-                "cancellation_reason": {
+                "cancellationReason": {
                     "type": "string",
                     "example": "CHANGED_MIND"
                 }
@@ -468,7 +468,7 @@ const docTemplate = `{
         "dto.OrderCreatedResponse": {
             "type": "object",
             "properties": {
-                "OrderID": {
+                "orderId": {
                     "type": "string",
                     "example": "550e8400-e29b-41d4-a716-446655440000"
                 }
@@ -538,7 +538,7 @@ const docTemplate = `{
         "dto.StaffCancelOrderRequest": {
             "type": "object",
             "properties": {
-                "cancellation_reason": {
+                "cancellationReason": {
                     "type": "string",
                     "example": "OUT_OF_STOCK"
                 }

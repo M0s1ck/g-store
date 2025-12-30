@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Order Tracking (WS + Push)</title>
+
+    <!-- Toastify CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <style>
+        body { font-family: Arial, Helvetica, sans-serif; padding: 24px; max-width: 720px; margin: auto;}
+        label { display:block; margin-top:12px; }
+        input[type="text"], input[type="number"] { width:100%; padding:8px; margin-top:6px; box-sizing:border-box;}
+        button { margin-top:12px; padding:10px 16px; font-size:16px; cursor:pointer; }
+        .log { margin-top:18px; background:#f7f7f7; padding:10px; height:200px; overflow:auto; border:1px solid #eee; }
+        .small { font-size:13px; color:#666; margin-top:6px }
+    </style>
+</head>
+<body>
+<h1>Отслеживание заказа (WebSocket + Push)</h1>
+
+<label>X-User-ID
+    <input id="userId" type="text" value="550e8400-e29b-41d4-a716-446655440001" />
+</label>
+
+<label>Сумма заказа (amount)
+    <input id="amount" type="number" value="190" min="1" />
+</label>
+
+<button id="createBtn">Оформить заказ</button>
+<div class="small">API create: <code>POST http://localhost/api/orders/v1/orders</code></div>
+<div class="small">WS: <code>ws://localhost/ws/orders/</code></div>
+
+<div class="log" id="log"></div>
+
+<!-- Toastify JS -->
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+<script>
+    (function(){
+        const apiBase = 'http://localhost'; // используем ваш api-gateway (host)
+        const wsUrl = 'ws://localhost/ws/orders/'; // как вы указали
+        const logEl = document.getElementById('log');
+        const userIdEl = document.getElementById('userId');
+        const amountEl = document.getElementById('amount');
+        const createBtn = document.getElementById('createBtn');
+
+        function log(msg) {
+            const line = document.createElement('div');
+            line.textContent = (new Date()).toLocaleTimeString() + ' — ' + msg;
+            logEl.appendChild(line);
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(msg);
+        }
+
+        function toast(text, type='info') {
+            Toastify({
+                text,
+                duration: 5000,
+                gravity: "top",
+                position: "right",
+                close: true,
+                // simple styling via class
+                style: {
+                    background: type === 'error' ? "#d9534f" : (type === 'success' ? "#5cb85c" : "#333")
+                }
+            }).showToast();
+        }
+
+        function notifyBrowser(title, body) {
+            if (!("Notification" in window)) return;
+            if (Notification.permission === "granted") {
+                new Notification(title, { body });
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(p => {
+                    if (p === "granted") new Notification(title, { body });
+                });
+            }
+        }
+
+        // WebSocket management
+        let ws = null;
+        const subscribed = new Set();
+
+        function ensureWs() {
+            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return ws;
+            log('Opening WebSocket: ' + wsUrl);
+            ws = new WebSocket(wsUrl);
+
+            ws.addEventListener('open', () => {
+                log('WS: connected');
+                toast('WebSocket подключён', 'success');
+                // re-subscribe to known orders
+                for (const orderId of subscribed) {
+                    sendSubscribe(orderId);
+                }
+            });
+
+            ws.addEventListener('message', ev => {
+                try {
+                    const msg = JSON.parse(ev.data);
+                    handleWsMessage(msg);
+                } catch (e) {
+                    log('WS: не удалось распарсить сообщение: ' + ev.data);
+                }
+            });
+
+            ws.addEventListener('close', () => {
+                log('WS: закрыт, пробуем переподключиться при следующем действии');
+                toast('WebSocket закрыт', 'error');
+            });
+
+            ws.addEventListener('error', (e) => {
+                log('WS: ошибка: ' + e.message);
+            });
+
+            return ws;
+        }
+
+        function sendRaw(obj) {
+            try {
+                ensureWs();
+                if (!ws || ws.readyState !== WebSocket.OPEN) {
+                    // если ещё не открыт — ждём небольшую паузу и отправим позже
+                    log('WS не открыт: отложенная отправка: ' + JSON.stringify(obj));
+                    setTimeout(() => {
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+                            ws.send(JSON.stringify(obj));
+                        } else {
+                            log('WS всё ещё не открыт — сообщение не отправлено');
+                        }
+                    }, 500);
+                    return;
+                }
+                ws.send(JSON.stringify(obj));
+                log('WS: отправлено -> ' + JSON.stringify(obj));
+            } catch (e) {
+                log('WS отправка ошибка: ' + e.message);
+            }
+        }
+
+        function sendSubscribe(orderId) {
+            subscribed.add(orderId);
+            sendRaw({ type: "subscribe", orderId });
+            toast('Подписка на обновления заказа ' + orderId, 'info');
+        }
+
+        function handleWsMessage(msg) {
+            if (!msg.type) {
+                log('WS: пришло сообщение без type: ' + JSON.stringify(msg));
+                return;
+            }
+            if (msg.type === 'order.status.changed') {
+                const d = msg.data || {};
+                const id = d.orderId || d.id;
+                const status = d.status;
+                log(`Статус заказа ${id} → ${status}`);
+                toast(`Заказ ${id}: ${status}`, 'info');
+                notifyBrowser('Статус заказа', `Заказ ${id}: ${status}`);
+            } else if (msg.type === 'order.cancelled' || msg.type === 'order.canceled') {
+                const d = msg.data || {};
+                const id = d.orderId || d.id;
+                const reason = d.reason || 'UNKNOWN';
+                log(`Заказ ${id} отменён: ${reason}`);
+                toast(`Заказ ${id} отменён: ${reason}`, 'error');
+                notifyBrowser('Заказ отменён', `Заказ ${id}: ${reason}`);
+            } else {
+                log('WS: неизвестный тип сообщения: ' + msg.type + ' — ' + JSON.stringify(msg));
+            }
+        }
+
+        // Create order via API gateway
+        async function createOrder() {
+            const userId = userIdEl.value.trim();
+            const amount = Number(amountEl.value);
+            if (!userId) { toast('Введите X-User-ID', 'error'); return; }
+            if (!amount || amount <= 0) { toast('Введите корректную сумму', 'error'); return; }
+
+            const payload = { amount };
+
+            try {
+                log('POST ' + apiBase + '/api/orders/v1/orders => ' + JSON.stringify(payload));
+                const resp = await fetch(apiBase + '/api/orders/v1/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-User-ID': userId
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const text = await resp.text();
+                let data = null;
+                try { data = JSON.parse(text); } catch(e){ data = text; }
+
+                if (!resp.ok) {
+                    log('Ошибка создания заказа: ' + resp.status + ' ' + text);
+                    toast('Ошибка создания заказа: ' + resp.status, 'error');
+                    return;
+                }
+
+                log('Ответ сервера: ' + JSON.stringify(data));
+                // Попробуем найти orderId в нескольких вариантах
+                const orderId = (data && (data.orderId || data.id || (data.order && data.order.id) || (data.data && data.data.orderId))) || null;
+
+                if (!orderId) {
+                    // если нет orderId, показываем полный ответ и просим ввести id вручную
+                    toast('Заказ создан — но ответ сервера не содержит orderId. Проверьте log.', 'success');
+                    log('Заказ создан, но orderId не найден автоматически. Ответ сервера: ' + JSON.stringify(data));
+                    return;
+                }
+
+                toast('Заказ создан: ' + orderId, 'success');
+                // подписываемся на WS
+                ensureWs();
+                // небольшая задержка, чтобы WS гарантированно открылся
+                setTimeout(()=> sendSubscribe(orderId), 300);
+            } catch (e) {
+                log('Ошибка запроса: ' + e.message);
+                toast('Ошибка запроса: ' + e.message, 'error');
+            }
+        }
+
+        // UI handlers
+        createBtn.addEventListener('click', () => {
+            // спросим разрешение на Notification заранее
+            if ("Notification" in window && Notification.permission === "default") {
+                Notification.requestPermission();
+            }
+            createOrder();
+        });
+
+        // при закрытии вкладки — закрываем WS корректно
+        window.addEventListener('beforeunload', () => {
+            if (ws) ws.close();
+        });
+
+        log('Готово. Нажмите "Оформить заказ" чтобы создать и подписаться.');
+    })();
+</script>
+</body>
+</html>

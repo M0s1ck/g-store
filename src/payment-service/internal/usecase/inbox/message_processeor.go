@@ -44,6 +44,8 @@ func (p *MessageProcessor) ProcessBatch(ctx context.Context) error {
 	}
 
 	for _, msg := range msgs {
+		log.Printf("Processing msg: %v event: %v", msg.Topic, msg.EventType)
+
 		handler, ok := p.handlers[msg.EventType]
 		if !ok {
 			log.Printf("no handler for event type %s", msg.EventType)

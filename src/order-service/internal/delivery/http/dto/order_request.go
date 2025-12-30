@@ -9,9 +9,9 @@ type UpdateOrderStatusRequest struct {
 }
 
 type ConsumerCancelOrderRequest struct {
-	CancellationReason string `json:"cancellation_reason,omitempty" example:"CHANGED_MIND"`
+	CancellationReason string `json:"cancellationReason,omitempty" example:"CHANGED_MIND"`
 }
 
 type StaffCancelOrderRequest struct {
-	CancellationReason string `json:"cancellation_reason" example:"OUT_OF_STOCK"`
+	CancellationReason string `json:"cancellationReason" example:"OUT_OF_STOCK"`
 }

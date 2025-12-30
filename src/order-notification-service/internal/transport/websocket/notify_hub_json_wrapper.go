@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"log"
 	"order-notification-service/internal/domain/events/consumed"
-
-	"github.com/google/uuid"
 )
 
 type NotifyHubJSONWrapper struct {
@@ -21,15 +19,14 @@ func NewNotifyHubJSONWrapper(hub *Hub) *NotifyHubJSONWrapper {
 
 func (n *NotifyHubJSONWrapper) NotifyOrderStatusChanged(
 	_ context.Context,
-	event consumed_events.OrderStatusChangedEvent,
+	event *consumed_events.OrderStatusChangedEvent,
 ) {
-	data, err := json.Marshal(struct {
-		OrderID uuid.UUID `json:"orderId"`
-		Status  string    `json:"status"`
-	}{
+	dto := StatusChanged{
 		OrderID: event.OrderId,
 		Status:  string(event.Status),
-	})
+	}
+
+	data, err := json.Marshal(dto)
 
 	if err != nil {
 		log.Printf("marshal error: %v", err)
@@ -38,6 +35,36 @@ func (n *NotifyHubJSONWrapper) NotifyOrderStatusChanged(
 
 	envelope := Envelope{
 		Type: "order.status.changed",
+		Data: data,
+	}
+
+	payload, err := json.Marshal(envelope)
+	if err != nil {
+		log.Printf("marshal envelope error: %v", err)
+		return
+	}
+
+	n.hub.NotifyOrder(event.OrderId, payload)
+}
+
+func (n *NotifyHubJSONWrapper) NotifyOrderCancelled(
+	_ context.Context,
+	event *consumed_events.OrderCancelledEvent,
+) {
+	dto := OrderCancelled{
+		OrderID: event.OrderId,
+		Reason:  string(event.CancelReason),
+	}
+
+	data, err := json.Marshal(dto)
+
+	if err != nil {
+		log.Printf("marshal error: %v", err)
+		return
+	}
+
+	envelope := Envelope{
+		Type: "order.cancelled",
 		Data: data,
 	}
 

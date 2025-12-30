@@ -3,7 +3,7 @@ package notify_order_status_changed
 import (
 	"context"
 	"log"
-	consumed_events "order-notification-service/internal/domain/events/consumed"
+	"order-notification-service/internal/domain/events/consumed"
 )
 
 type NotifyUsecase struct {
@@ -16,10 +16,14 @@ func NewUsecase(notifier TransportNotifier) *NotifyUsecase {
 	}
 }
 
-func (u *NotifyUsecase) Execute(ctx context.Context, evt consumed_events.OrderStatusChangedEvent) {
+func (u *NotifyUsecase) NotifyStatusChanged(ctx context.Context, evt *consumed_events.OrderStatusChangedEvent) {
 	log.Printf("Got event: %v %v %v", evt.Status, evt.OrderId, evt.UserId)
 
 	// TODO: maybe add check if ok transition here (including registers of statuses)
 
 	u.notifier.NotifyOrderStatusChanged(ctx, evt)
+}
+
+func (u *NotifyUsecase) NotifyCancelled(ctx context.Context, evt *consumed_events.OrderCancelledEvent) {
+	u.notifier.NotifyOrderCancelled(ctx, evt)
 }

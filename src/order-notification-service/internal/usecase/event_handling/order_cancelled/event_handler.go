@@ -1,11 +1,10 @@
-package order_status_changed
+package order_cancelled
 
 import (
 	"context"
 	"order-notification-service/internal/usecase/notify_order_status_changed"
 )
 
-// EventHandler maps payload to event and calls usecase
 type EventHandler struct {
 	notifyUC            *notify_order_status_changed.NotifyUsecase
 	payloadMapper       PayloadMapper
@@ -15,12 +14,12 @@ type EventHandler struct {
 func NewEventHandler(
 	notifyUC *notify_order_status_changed.NotifyUsecase,
 	mapper PayloadMapper,
-	ordStChangedEvtType string,
+	ordCancelEvtType string,
 ) *EventHandler {
 
 	return &EventHandler{
 		notifyUC:            notifyUC,
-		ordStChangedEvtType: ordStChangedEvtType,
+		ordStChangedEvtType: ordCancelEvtType,
 		payloadMapper:       mapper,
 	}
 }
@@ -30,11 +29,11 @@ func (h *EventHandler) EventType() string {
 }
 
 func (h *EventHandler) Handle(ctx context.Context, payload []byte) error {
-	event, err := h.payloadMapper.OrderStatusChangedEventFromPayload(payload)
+	event, err := h.payloadMapper.ToOrderCancelledEvent(payload)
 	if err != nil {
 		return err
 	}
 
-	h.notifyUC.NotifyStatusChanged(ctx, event)
+	h.notifyUC.NotifyCancelled(ctx, event)
 	return nil
 }

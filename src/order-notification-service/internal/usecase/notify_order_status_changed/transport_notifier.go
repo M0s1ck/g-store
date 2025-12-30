@@ -6,5 +6,6 @@ import (
 )
 
 type TransportNotifier interface {
-	NotifyOrderStatusChanged(ctx context.Context, event consumed_events.OrderStatusChangedEvent)
+	NotifyOrderStatusChanged(ctx context.Context, event *consumed_events.OrderStatusChangedEvent)
+	NotifyOrderCancelled(ctx context.Context, event *consumed_events.OrderCancelledEvent)
 }

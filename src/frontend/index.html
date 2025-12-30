@@ -38,8 +38,8 @@
 
 <script>
     (function(){
-        const apiBase = 'http://localhost'; // используем ваш api-gateway (host)
-        const wsUrl = 'ws://localhost/ws/orders/'; // как вы указали
+        const apiBase = 'http://localhost';
+        const wsUrl = 'ws://localhost/ws/orders/';
         const logEl = document.getElementById('log');
         const userIdEl = document.getElementById('userId');
         const amountEl = document.getElementById('amount');
@@ -201,11 +201,10 @@
                 }
 
                 log('Ответ сервера: ' + JSON.stringify(data));
-                // Попробуем найти orderId в нескольких вариантах
+
                 const orderId = (data && (data.orderId || data.id || (data.order && data.order.id) || (data.data && data.data.orderId))) || null;
 
                 if (!orderId) {
-                    // если нет orderId, показываем полный ответ и просим ввести id вручную
                     toast('Заказ создан — но ответ сервера не содержит orderId. Проверьте log.', 'success');
                     log('Заказ создан, но orderId не найден автоматически. Ответ сервера: ' + JSON.stringify(data));
                     return;

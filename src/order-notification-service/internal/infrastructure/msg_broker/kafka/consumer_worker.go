@@ -17,14 +17,20 @@ const (
 )
 
 type ConsumerWorker struct {
-	reader       *kafka.Reader
-	msgProcessor *event_handling.EventMsgProcessor
+	reader            *kafka.Reader
+	msgProcessor      *event_handling.EventMsgProcessor
+	allowedEventTypes map[string]struct{}
 }
 
-func NewKafkaConsumerWorker(reader *kafka.Reader, msgProcessor *event_handling.EventMsgProcessor) *ConsumerWorker {
+func NewKafkaConsumerWorker(
+	reader *kafka.Reader,
+	msgProcessor *event_handling.EventMsgProcessor,
+	AllowedEventTypes map[string]struct{},
+) *ConsumerWorker {
 	return &ConsumerWorker{
-		reader:       reader,
-		msgProcessor: msgProcessor,
+		reader:            reader,
+		msgProcessor:      msgProcessor,
+		allowedEventTypes: AllowedEventTypes,
 	}
 }
 
@@ -48,6 +54,12 @@ func (w *ConsumerWorker) Run(ctx context.Context) error {
 		eventType := getHeader(msg, eventTypeHeaderName)
 		if eventType == "" {
 			log.Printf("missing event_type for msg %v", mesId)
+			continue
+		}
+
+		if _, ok := w.allowedEventTypes[eventType]; !ok {
+			log.Printf("skip unsupported event_type=%s msg_id=%v", eventType, mesId)
+			_ = w.reader.CommitMessages(ctx, msg)
 			continue
 		}
 

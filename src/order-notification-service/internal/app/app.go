@@ -4,12 +4,12 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"order-notification-service/internal/infrastructure/msg_broker/proto/mappers"
 	"time"
 
 	"order-notification-service/internal/config"
-	"order-notification-service/internal/infrastructure/messaging/kafka"
+	"order-notification-service/internal/infrastructure/msg_broker/kafka"
 	"order-notification-service/internal/infrastructure/worker"
-	protostatuschanged "order-notification-service/internal/transport/proto/order_status_changed"
 	"order-notification-service/internal/transport/websocket"
 	"order-notification-service/internal/usecase/event_handling"
 	"order-notification-service/internal/usecase/event_handling/order_status_changed"
@@ -27,10 +27,11 @@ type App struct {
 
 func Build(conf *config.Config) *App {
 	kafkaConfig := kafka.NewKafkaConfig(&conf.Broker)
+	ordEvtReader := kafka.NewKafkaReader(kafkaConfig, kafkaConfig.OrderNotificationEventTopic)
 
-	ordNotifyReader := kafka.NewKafkaReader(kafkaConfig, kafkaConfig.OrderNotificationEventTopic)
-
-	stChMapper := protostatuschanged.NewPayloadMapper()
+	stChMapper := proto_mappers.NewOrderStatusChangedPayloadMapper()
+	cancelMapper := proto_mappers.NewOrderCancelledPayloadMapper()
+	_ = cancelMapper
 
 	hub := websocket.NewHub()
 	hubJsonWrapper := websocket.NewNotifyHubJSONWrapper(hub)
@@ -46,7 +47,7 @@ func Build(conf *config.Config) *App {
 
 	msgProcessor := event_handling.NewEventMsgProcessor(eventHands)
 
-	kafkaConsumerWorker := kafka.NewKafkaConsumerWorker(ordNotifyReader, msgProcessor)
+	kafkaConsumerWorker := kafka.NewKafkaConsumerWorker(ordEvtReader, msgProcessor, conf.Broker.AllowedEventTypes)
 
 	return &App{
 		conf:          conf,

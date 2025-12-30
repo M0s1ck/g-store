@@ -4,7 +4,7 @@
 // 	protoc        v6.33.2
 // source: order_status_changed_event.proto
 
-package proto
+package gen
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -28,7 +28,7 @@ const (
 	OrderStatus_ORDER_STATUS_UNSPECIFIED OrderStatus = 0
 	OrderStatus_ORDER_STATUS_PENDING     OrderStatus = 1
 	OrderStatus_ORDER_STATUS_PAID        OrderStatus = 2
-	OrderStatus_ORDER_STATUS_CANCELED    OrderStatus = 3
+	OrderStatus_ORDER_STATUS_CANCELLED   OrderStatus = 3
 	OrderStatus_ORDER_STATUS_ASSEMBLING  OrderStatus = 4
 	OrderStatus_ORDER_STATUS_ASSEMBLED   OrderStatus = 5
 	OrderStatus_ORDER_STATUS_DELIVERING  OrderStatus = 6
@@ -41,7 +41,7 @@ var (
 		0: "ORDER_STATUS_UNSPECIFIED",
 		1: "ORDER_STATUS_PENDING",
 		2: "ORDER_STATUS_PAID",
-		3: "ORDER_STATUS_CANCELED",
+		3: "ORDER_STATUS_CANCELLED",
 		4: "ORDER_STATUS_ASSEMBLING",
 		5: "ORDER_STATUS_ASSEMBLED",
 		6: "ORDER_STATUS_DELIVERING",
@@ -51,7 +51,7 @@ var (
 		"ORDER_STATUS_UNSPECIFIED": 0,
 		"ORDER_STATUS_PENDING":     1,
 		"ORDER_STATUS_PAID":        2,
-		"ORDER_STATUS_CANCELED":    3,
+		"ORDER_STATUS_CANCELLED":   3,
 		"ORDER_STATUS_ASSEMBLING":  4,
 		"ORDER_STATUS_ASSEMBLED":   5,
 		"ORDER_STATUS_DELIVERING":  6,
@@ -87,15 +87,13 @@ func (OrderStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 type OrderStatusChangedEvent struct {
-	state              protoimpl.MessageState `protogen:"open.v1"`
-	MessageId          string                 `protobuf:"bytes,1,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
-	OrderId            string                 `protobuf:"bytes,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	UserId             string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Status             OrderStatus            `protobuf:"varint,4,opt,name=status,proto3,enum=orders.OrderStatus" json:"status,omitempty"`
-	CancellationReason *string                `protobuf:"bytes,5,opt,name=cancellation_reason,json=cancellationReason,proto3,oneof" json:"cancellation_reason,omitempty"`
-	CreatedAt          *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OrderId       string                 `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Status        OrderStatus            `protobuf:"varint,3,opt,name=status,proto3,enum=orders.OrderStatus" json:"status,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *OrderStatusChangedEvent) Reset() {
@@ -128,13 +126,6 @@ func (*OrderStatusChangedEvent) Descriptor() ([]byte, []int) {
 	return file_order_status_changed_event_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *OrderStatusChangedEvent) GetMessageId() string {
-	if x != nil {
-		return x.MessageId
-	}
-	return ""
-}
-
 func (x *OrderStatusChangedEvent) GetOrderId() string {
 	if x != nil {
 		return x.OrderId
@@ -156,13 +147,6 @@ func (x *OrderStatusChangedEvent) GetStatus() OrderStatus {
 	return OrderStatus_ORDER_STATUS_UNSPECIFIED
 }
 
-func (x *OrderStatusChangedEvent) GetCancellationReason() string {
-	if x != nil && x.CancellationReason != nil {
-		return *x.CancellationReason
-	}
-	return ""
-}
-
 func (x *OrderStatusChangedEvent) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
@@ -174,26 +158,22 @@ var File_order_status_changed_event_proto protoreflect.FileDescriptor
 
 const file_order_status_changed_event_proto_rawDesc = "" +
 	"\n" +
-	" order_status_changed_event.proto\x12\x06orders\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa2\x02\n" +
-	"\x17OrderStatusChangedEvent\x12\x1d\n" +
+	" order_status_changed_event.proto\x12\x06orders\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb5\x01\n" +
+	"\x17OrderStatusChangedEvent\x12\x19\n" +
+	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12+\n" +
+	"\x06status\x18\x03 \x01(\x0e2\x13.orders.OrderStatusR\x06status\x129\n" +
 	"\n" +
-	"message_id\x18\x01 \x01(\tR\tmessageId\x12\x19\n" +
-	"\border_id\x18\x02 \x01(\tR\aorderId\x12\x17\n" +
-	"\auser_id\x18\x03 \x01(\tR\x06userId\x12+\n" +
-	"\x06status\x18\x04 \x01(\x0e2\x13.orders.OrderStatusR\x06status\x124\n" +
-	"\x13cancellation_reason\x18\x05 \x01(\tH\x00R\x12cancellationReason\x88\x01\x01\x129\n" +
-	"\n" +
-	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAtB\x16\n" +
-	"\x14_cancellation_reason*\xe6\x01\n" +
+	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt*\xe7\x01\n" +
 	"\vOrderStatus\x12\x1c\n" +
 	"\x18ORDER_STATUS_UNSPECIFIED\x10\x00\x12\x18\n" +
 	"\x14ORDER_STATUS_PENDING\x10\x01\x12\x15\n" +
-	"\x11ORDER_STATUS_PAID\x10\x02\x12\x19\n" +
-	"\x15ORDER_STATUS_CANCELED\x10\x03\x12\x1b\n" +
+	"\x11ORDER_STATUS_PAID\x10\x02\x12\x1a\n" +
+	"\x16ORDER_STATUS_CANCELLED\x10\x03\x12\x1b\n" +
 	"\x17ORDER_STATUS_ASSEMBLING\x10\x04\x12\x1a\n" +
 	"\x16ORDER_STATUS_ASSEMBLED\x10\x05\x12\x1b\n" +
 	"\x17ORDER_STATUS_DELIVERING\x10\x06\x12\x17\n" +
-	"\x13ORDER_STATUS_ISSUED\x10\aBPZNorder-notification-service/internal/transport/proto/order_status_changed;protob\x06proto3"
+	"\x13ORDER_STATUS_ISSUED\x10\aBMZKorder-notification-service/internal/infrastructure/msg-broker/proto/gen;genb\x06proto3"
 
 var (
 	file_order_status_changed_event_proto_rawDescOnce sync.Once
@@ -229,7 +209,6 @@ func file_order_status_changed_event_proto_init() {
 	if File_order_status_changed_event_proto != nil {
 		return
 	}
-	file_order_status_changed_event_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

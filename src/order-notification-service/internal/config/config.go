@@ -18,9 +18,15 @@ func Load() (*Config, error) {
 		Broker: BrokerConfig{
 			Brokers:                     strings.Split(os.Getenv("BROKER_HOST"), ","),
 			ConsumerGroup:               os.Getenv("BROKER_CONSUMER_GROUP"),
-			OrderNotificationEventTopic: os.Getenv("BROKER_ORDER_NOTIFICATION_EVENTS_TOPIC"),
+			OrderEventTopic:             os.Getenv("BROKER_ORDER_EVENTS_TOPIC"),
 			OrderStatusChangedEventType: os.Getenv("BROKER_ORDER_STATUS_CHANGED_EVENT_TYPE"),
+			OrderCancelledEventType:     os.Getenv("BROKER_ORDER_CANCELLED_EVENT_TYPE"),
 		},
+	}
+
+	cfg.Broker.AllowedEventTypes = map[string]struct{}{
+		cfg.Broker.OrderStatusChangedEventType: {},
+		cfg.Broker.OrderCancelledEventType:     {},
 	}
 
 	return cfg, nil

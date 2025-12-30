@@ -1,4 +1,17 @@
-package value_objects
+package consumed_events
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
+type OrderStatusChangedEvent struct {
+	OrderId    uuid.UUID
+	UserId     uuid.UUID
+	Status     OrderStatus
+	OccurredAt time.Time
+}
 
 type OrderStatus string
 

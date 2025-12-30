@@ -2,7 +2,6 @@ package order_status_changed
 
 import (
 	"context"
-
 	"order-notification-service/internal/usecase/notify_order_status_changed"
 )
 
@@ -36,14 +35,6 @@ func (h *EventHandler) Handle(ctx context.Context, payload []byte) error {
 		return err
 	}
 
-	ucReq := notify_order_status_changed.Event{
-		OrderID:            event.OrderId,
-		UserID:             event.UserId,
-		Status:             event.Status,
-		CancellationReason: event.CancellationReason,
-	}
-
-	h.notifyUC.Execute(ctx, ucReq)
-
+	h.notifyUC.Execute(ctx, *event)
 	return nil
 }

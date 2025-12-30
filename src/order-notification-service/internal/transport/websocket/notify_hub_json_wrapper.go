@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"order-notification-service/internal/usecase/notify_order_status_changed"
+	"order-notification-service/internal/domain/events/consumed"
 
 	"github.com/google/uuid"
 )
@@ -21,16 +21,14 @@ func NewNotifyHubJSONWrapper(hub *Hub) *NotifyHubJSONWrapper {
 
 func (n *NotifyHubJSONWrapper) NotifyOrderStatusChanged(
 	_ context.Context,
-	event notify_order_status_changed.Event,
+	event consumed_events.OrderStatusChangedEvent,
 ) {
 	data, err := json.Marshal(struct {
-		OrderID            uuid.UUID `json:"orderId"`
-		Status             string    `json:"status"`
-		CancellationReason *string   `json:"cancellationReason,omitempty"`
+		OrderID uuid.UUID `json:"orderId"`
+		Status  string    `json:"status"`
 	}{
-		OrderID:            event.OrderID,
-		Status:             string(event.Status),
-		CancellationReason: event.CancellationReason,
+		OrderID: event.OrderId,
+		Status:  string(event.Status),
 	})
 
 	if err != nil {
@@ -49,5 +47,5 @@ func (n *NotifyHubJSONWrapper) NotifyOrderStatusChanged(
 		return
 	}
 
-	n.hub.NotifyOrder(event.OrderID, payload)
+	n.hub.NotifyOrder(event.OrderId, payload)
 }

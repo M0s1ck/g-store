@@ -13,7 +13,7 @@ func NewKafkaConfig(conf *config.BrokerConfig) *Config {
 	return &Config{
 		Brokers:                     conf.Brokers,
 		ConsumerGroup:               conf.ConsumerGroup,
-		OrderNotificationEventTopic: conf.OrderNotificationEventTopic,
+		OrderNotificationEventTopic: conf.OrderEventTopic,
 		OrderStatusChangedEventType: conf.OrderStatusChangedEventType,
 	}
 }

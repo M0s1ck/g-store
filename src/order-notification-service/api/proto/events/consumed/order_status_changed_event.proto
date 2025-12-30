@@ -4,18 +4,15 @@ package orders;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "order-notification-service/internal/transport/proto/order_status_changed;proto";
+option go_package = "order-notification-service/internal/infrastructure/msg-broker/proto/gen;gen";
 
 message OrderStatusChangedEvent {
-  string message_id = 1;
-  string order_id   = 2;
-  string user_id    = 3;
+  string order_id   = 1;
+  string user_id    = 2;
 
-  OrderStatus status = 4;
+  OrderStatus status = 3;
 
-  optional string cancellation_reason = 5;
-
-  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp created_at = 4;
 }
 
 enum OrderStatus {
@@ -23,7 +20,7 @@ enum OrderStatus {
 
   ORDER_STATUS_PENDING     = 1;
   ORDER_STATUS_PAID        = 2;
-  ORDER_STATUS_CANCELED    = 3;
+  ORDER_STATUS_CANCELLED   = 3;
   ORDER_STATUS_ASSEMBLING  = 4;
   ORDER_STATUS_ASSEMBLED   = 5;
   ORDER_STATUS_DELIVERING  = 6;

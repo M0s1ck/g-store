@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package events;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "payment-service/internal/infrastructure/msg_broker/proto/gen;gen";
+
+message OrderCreatedEvent {
+  string order_id   = 1;
+  string user_id    = 2;
+  int64  amount     = 3;
+  google.protobuf.Timestamp created_at = 4;
+}

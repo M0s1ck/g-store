@@ -1,4 +1,4 @@
-package order_created
+package consumed_events
 
 import (
 	"time"
@@ -7,7 +7,6 @@ import (
 )
 
 type OrderCreatedEvent struct {
-	MessageId uuid.UUID
 	OrderId   uuid.UUID
 	UserId    uuid.UUID
 	Amount    int64

@@ -22,6 +22,11 @@ func (m *TxManager) WithinTx(
 	fn func(ctx context.Context) error,
 ) error {
 
+	// if we're in tx already, we don't create new one
+	if _, ok := TxFromCtx(ctx); ok {
+		return fn(ctx)
+	}
+
 	tx, err := m.db.BeginTxx(ctx, &sql.TxOptions{
 		Isolation: sql.LevelReadCommitted,
 	})
@@ -43,4 +48,9 @@ func (m *TxManager) WithinTx(
 	}
 
 	return tx.Commit()
+}
+
+func TxFromCtx(ctx context.Context) (*sqlx.Tx, bool) {
+	tx, ok := ctx.Value(TxKey{}).(*sqlx.Tx)
+	return tx, ok
 }

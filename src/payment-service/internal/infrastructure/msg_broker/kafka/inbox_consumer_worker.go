@@ -19,15 +19,27 @@ const (
 
 // InboxKafkaConsumerWorker background worker to fetch messages from kafka and write them to inbox
 type InboxKafkaConsumerWorker struct {
-	repo   inbox.BrokerConsumerRepo
-	reader *kafka.Reader
+	repo              inbox.BrokerConsumerRepo
+	reader            *kafka.Reader
+	allowedEventTypes map[string]struct{}
 }
 
-func NewInboxKafkaConsumerWorker(repo inbox.BrokerConsumerRepo, reader *kafka.Reader) *InboxKafkaConsumerWorker {
-	return &InboxKafkaConsumerWorker{repo: repo, reader: reader}
+func NewInboxKafkaConsumerWorker(
+	repo inbox.BrokerConsumerRepo,
+	reader *kafka.Reader,
+	allowedEventTypes map[string]struct{},
+) *InboxKafkaConsumerWorker {
+
+	return &InboxKafkaConsumerWorker{
+		repo:              repo,
+		reader:            reader,
+		allowedEventTypes: allowedEventTypes,
+	}
 }
 
 func (c *InboxKafkaConsumerWorker) Run(ctx context.Context) error {
+	log.Printf("Starting consumer worker")
+
 	for {
 		msg, err := c.reader.FetchMessage(ctx)
 		if err != nil {
@@ -47,6 +59,12 @@ func (c *InboxKafkaConsumerWorker) Run(ctx context.Context) error {
 		eventType := getHeader(msg, eventTypeHeaderName)
 		if eventType == "" {
 			log.Printf("missing event_type for msg %v", mesId)
+			continue
+		}
+
+		if _, ok := c.allowedEventTypes[eventType]; !ok {
+			log.Printf("skip unsupported event_type=%s msg_id=%v", eventType, mesId)
+			_ = c.reader.CommitMessages(ctx, msg)
 			continue
 		}
 

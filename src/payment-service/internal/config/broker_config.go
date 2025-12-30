@@ -5,6 +5,7 @@ type BrokerConfig struct {
 	ConsumerGroup             string
 	OrderEventsTopic          string
 	OrderCreatedEventType     string
+	OrderCancelledEventType   string
 	PaymentEventsTopic        string
 	PaymentProcessedEventType string
 }

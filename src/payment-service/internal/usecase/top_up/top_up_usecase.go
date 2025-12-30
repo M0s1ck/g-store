@@ -60,6 +60,7 @@ func (uc *TopUpUsecase) Execute(ctx context.Context,
 			AccountID: accId,
 			Amount:    amount,
 			Type:      entities.TransactionTopUp,
+			Direction: entities.DirectionIn,
 		}
 
 		err = uc.bTxRepo.Create(ctx, &balanceTx)

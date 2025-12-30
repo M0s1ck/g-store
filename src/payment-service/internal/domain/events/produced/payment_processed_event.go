@@ -1,4 +1,4 @@
-package events
+package produced_events
 
 import (
 	"time"
@@ -7,7 +7,6 @@ import (
 )
 
 type PaymentProcessedEvent struct {
-	MessageId            uuid.UUID
 	OrderId              uuid.UUID
 	UserId               uuid.UUID
 	Amount               int64

@@ -11,16 +11,18 @@ import (
 	"payment-service/internal/infrastructure/background_workers"
 	"payment-service/internal/infrastructure/db/postgres"
 	"payment-service/internal/infrastructure/db/postgres/repository"
-	kafka2 "payment-service/internal/infrastructure/messaging/kafka"
+	kafka2 "payment-service/internal/infrastructure/msg_broker/kafka"
+	"payment-service/internal/infrastructure/msg_broker/proto/mappers"
 	servlogger "payment-service/internal/infrastructure/services/logger"
-	"payment-service/internal/infrastructure/services/proto/proto_order_created"
-	"payment-service/internal/infrastructure/services/proto/proto_payment_processed"
 	"payment-service/internal/usecase/common/outbox"
 	"payment-service/internal/usecase/create_account"
+	"payment-service/internal/usecase/event_handlers/order_cancelled"
+	"payment-service/internal/usecase/event_handlers/order_created"
 	"payment-service/internal/usecase/get_account"
 	"payment-service/internal/usecase/inbox"
-	"payment-service/internal/usecase/order_created"
 	outboxuc "payment-service/internal/usecase/outbox"
+	"payment-service/internal/usecase/pay_for_order"
+	"payment-service/internal/usecase/refund_order"
 	"payment-service/internal/usecase/top_up"
 )
 
@@ -36,12 +38,13 @@ func Build(conf *config.Config) (http.Handler, []background_workers.BackgroundWo
 	txManager := postgres.NewTxManager(paymentsDb)
 	inboxRepo := repository.NewInboxRepository(paymentsDb)
 	accountRepo := repository.NewAccountRepository(paymentsDb)
-	balanceTransactionRepo := repository.NewBalanceTransactionRepository(paymentsDb)
+	transactionRepo := repository.NewBalanceTransactionRepository(paymentsDb)
 	outboxRepo := repository.NewOutboxRepository(paymentsDb)
 
 	getAccUC := get_account.NewGetByIdUsecase(accountRepo)
 	createAccUC := create_account.NewCreateAccountUsecase(accountRepo)
-	topUpUC := top_up.NewTopUpUsecase(accountRepo, balanceTransactionRepo, txManager)
+	topUpUC := top_up.NewTopUpUsecase(accountRepo, transactionRepo, txManager)
+	refundUC := refund_order.NewRefundUsecase(accountRepo, transactionRepo, txManager)
 
 	accountHandler := handlers.NewAccountHandler(getAccUC, createAccUC, topUpUC)
 
@@ -49,29 +52,27 @@ func Build(conf *config.Config) (http.Handler, []background_workers.BackgroundWo
 		AccountHandler: accountHandler,
 	})
 
-	protoOrderMapper := proto_order_created.NewPayloadMapper()
-	protoPaymentMapper := proto_payment_processed.NewPayloadMapper()
+	ordCreatedMapper := proto_mappers.NewOrderCreatedPayloadMapper()
+	paymentProcMapper := proto_mappers.NewPaymentProcessedPayloadMapper()
+	ordCancelMapper := proto_mappers.NewOrderCancelledPayloadMapper()
 
 	kafkaConfig := kafka2.NewKafkaConfig(&conf.Broker)
 	kafkaReader := kafka2.NewKafkaOrderCreatedReader(kafkaConfig)
 	kafkaPaymentsWriter := kafka2.NewKafkaWriter(kafkaConfig, kafkaConfig.PaymentEventsTopic)
 	kafkaProducer := kafka2.NewProducer(kafkaPaymentsWriter)
 
-	kafkaConsumerWorker := kafka2.NewInboxKafkaConsumerWorker(inboxRepo, kafkaReader)
+	kafkaConsumerWorker := kafka2.NewInboxKafkaConsumerWorker(inboxRepo, kafkaReader, kafkaConfig.AllowedEventTypes)
 
-	outboxMsgFactory := outbox.NewOutboxMessageFactory(protoPaymentMapper, kafkaConfig.PaymentProcessedEventType)
+	outboxMsgFactory := outbox.NewOutboxMessageFactory(paymentProcMapper, kafkaConfig.PaymentProcessedEventType)
 
-	orderCreatedEventHandler := order_created.NewOrderCreatedEventHandler(
-		accountRepo,
-		balanceTransactionRepo,
-		outboxRepo,
-		outboxMsgFactory,
-		protoOrderMapper,
-		kafkaConfig.OrderCreatedEventType,
-	)
+	payForOrderUC := pay_for_order.NewPayUsecase(accountRepo, transactionRepo, txManager, outboxRepo, outboxMsgFactory)
+
+	ordCreatedEvtHandler := order_created.NewEventHandler(payForOrderUC, ordCreatedMapper, kafkaConfig.OrderCreatedEventType)
+	ordCancelledEvtHandler := order_cancelled.NewEventHandler(refundUC, ordCancelMapper, kafkaConfig.OrderCancelledEventType)
 
 	messageHandlers := []inbox.MessageHandler{
-		orderCreatedEventHandler,
+		ordCreatedEvtHandler,
+		ordCancelledEvtHandler,
 	}
 
 	processor := inbox.NewMessageProcessor(inboxRepo, messageHandlers, txManager, 10)

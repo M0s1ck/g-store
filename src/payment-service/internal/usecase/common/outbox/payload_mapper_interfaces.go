@@ -1,7 +1,9 @@
 package outbox
 
-import "payment-service/internal/domain/events"
+import (
+	"payment-service/internal/domain/events/produced"
+)
 
 type PaymentProcessedEventPayloadMapper interface {
-	PaymentProcessedEventToPayload(event *events.PaymentProcessedEvent) ([]byte, error)
+	PaymentProcessedEventToPayload(event *produced_events.PaymentProcessedEvent) ([]byte, error)
 }

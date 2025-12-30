@@ -1,0 +1,1 @@
+DROP TYPE direction_type;

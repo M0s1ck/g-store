@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package events;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "payment-service/internal/infrastructure/msg_broker/proto/gen;gen";
+
+// OrderCancelledEvent is emitted when an order is cancelled.
+message OrderCancelledEvent {
+  string order_id = 1;
+  string user_id = 2;
+
+  CancellationReason cancellation_reason = 3;
+
+  CancelSource cancel_source = 4;
+
+  google.protobuf.Timestamp occurred_at = 5;
+}
+
+enum CancelSource {
+  CANCEL_SOURCE_UNSPECIFIED = 0;
+  CANCEL_SOURCE_STORE = 1;
+  CANCEL_SOURCE_CUSTOMER = 2;
+}
+
+enum CancellationReason {
+  CANCELLATION_REASON_UNSPECIFIED = 0;
+
+  NO_PAYMENT_ACCOUNT = 1;
+  INSUFFICIENT_FUNDS = 2;
+  PAYMENT_INTERNAL_ERROR = 3;
+  OUT_OF_STOCK = 4;
+  DELIVERY_UNAVAILABLE = 5;
+  CHANGED_MIND = 6;
+}

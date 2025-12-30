@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	httpSwagger "github.com/swaggo/http-swagger"
 
+	"payment-service/internal/delivery/http/dto"
 	"payment-service/internal/delivery/http/handlers"
 	mymiddleware "payment-service/internal/delivery/http/middleware"
 	"payment-service/internal/docs"
@@ -34,6 +35,7 @@ func NewRouter(deps *RouterDeps) http.Handler {
 		r.Post("/", deps.AccountHandler.Create)
 
 		r.With(mymiddleware.UUIDMiddleware("id")).
+			With(mymiddleware.BindJSONBodyMiddleware[dto.TopUpReq]()).
 			Patch("/{id}", deps.AccountHandler.TopUp)
 	})
 

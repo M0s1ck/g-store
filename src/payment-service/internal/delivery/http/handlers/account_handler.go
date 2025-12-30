@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -107,20 +106,11 @@ func (h *AccountHandler) Create(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/{id} [patch]
 func (h *AccountHandler) TopUp(w http.ResponseWriter, r *http.Request) {
-	var dtoReq dto.TopUpReq
-	if err := json.NewDecoder(r.Body).Decode(&dtoReq); err != nil {
-		helpers.RespondError(w, http.StatusBadRequest, "invalid request body")
-		return
-	}
-
-	defer func() {
-		_ = r.Body.Close()
-	}()
-
 	ctx := r.Context()
 
 	accId := mymiddleware.UUIDFromContext(ctx)
 	userId := mymiddleware.UserIdFromContext(ctx)
+	dtoReq := mymiddleware.BodyFromContext[dto.TopUpReq](ctx)
 
 	err := h.topUp.Execute(ctx, accId, userId, dtoReq.Amount)
 	if err != nil {

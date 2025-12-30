@@ -3,7 +3,9 @@ package outbox
 import (
 	"time"
 
-	"payment-service/internal/domain/events"
+	"github.com/google/uuid"
+
+	"payment-service/internal/domain/events/produced"
 	"payment-service/internal/domain/messages"
 )
 
@@ -23,7 +25,7 @@ func NewOutboxMessageFactory(
 	}
 }
 
-func (f *MessageFactory) PaymentProcessedEventToOutboxMessage(event *events.PaymentProcessedEvent,
+func (f *MessageFactory) PaymentProcessedEventToOutboxMessage(event *produced_events.PaymentProcessedEvent,
 ) *messages.OutboxMessage {
 
 	payload, err := f.paymentProcessedEventPayloadMapper.PaymentProcessedEventToPayload(event)
@@ -32,7 +34,7 @@ func (f *MessageFactory) PaymentProcessedEventToOutboxMessage(event *events.Paym
 	}
 
 	return &messages.OutboxMessage{
-		Id:          event.MessageId,
+		Id:          uuid.New(),
 		Aggregate:   "payment",
 		AggregateID: event.OrderId,
 		EventType:   f.paymentProcessedEventType,

@@ -1,4 +1,4 @@
-package repo_contracts
+package pay_for_order
 
 import (
 	"context"

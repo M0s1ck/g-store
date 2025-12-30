@@ -25,6 +25,7 @@ func NewInboxProcessWorker(
 }
 
 func (w *InboxProcessWorker) Run(ctx context.Context) error {
+	log.Printf("Starting inbox processor worker")
 	ticker := time.NewTicker(w.interval)
 	defer ticker.Stop()
 

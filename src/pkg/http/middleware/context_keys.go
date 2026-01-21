@@ -1,7 +1,10 @@
 package middleware
 
-type CtxKey int
+type сtxKey int
 
 const (
-	ctxKeyUUID CtxKey = iota
+	ctxKeyUUID сtxKey = iota
+	ctxKeyBody
+	ctxKeyPage
+	ctxKeyLimit
 )
